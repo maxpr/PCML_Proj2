@@ -5,7 +5,7 @@
 - ```src/data/```: folder containing the source data (training and test sets) and where are stored the predictions uploaded on Kaggle
 - ```src/plots/```: folder containing the plot used in the report
 - ```src/```: folder containing the code. You can find the following in here
-	- ```project2.ipnyb```:  notebook for tests
+	- ```sandbox.ipnyb```:  notebook for tests
 
 #### Input - IMPORTED FROM Project 1 TO CHANGE
 - ```y```: the output variable
