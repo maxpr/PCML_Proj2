@@ -1,5 +1,4 @@
-# Machine Learning - Project 2
-# Hugo, Max & André
+# Machine Learning - Project 2 - Hugo, Max & André
 
 ## Source files
 - ```src/data/```: folder containing the source data (training and test sets) and where are stored the predictions uploaded on Kaggle
@@ -73,7 +72,7 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
 2. 1/3: executable and documented code, rules:
   - Reproducibility (file run.py producing exactly same .csv predictions of the best submission in Kaggle)
   - Documentation (in report and in code, README and includes data preparation, feature generation and cross-validation steps)
-  - 6 basic method implementations
+  - basic method implementations
 3. 1/3: 4 pages report
   - 1/2: correctly use, implement and describe the baseline methods
   - 1/2: scientific contribution (scientific novelty, creativity, reproducibility, solid comparison baselines to support claims, writeup quality)
