@@ -25,7 +25,7 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
 ## TODO
 
 - [ ] Code
-  - [ ] xx baseline methods implemented and tested
+  - [ ] 4 baseline methods implemented and tested
 	- [ ] SGD updates to train the matrix factorization
 	- [ ] Construct feature representation of each training tweet
 	- [ ] Linear Classifier Trainer (logistic regression or SVM, scikit lib)
@@ -40,8 +40,10 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
   - [ ] Bias-Variance analysis, to improve variance (try smaller sets of features, increase regularization), to improve bias (try getting additional features, try adding polynomial features, decrease regularization)
   - [ ] try different cost functions 
   - [ ] try other models to improve accuracy and computation speed
-	- [ ] Determine what we want to try
+	- [ ] ALS instead of SGD
   - [ ] Feature Processing
+  	- [ ] Word analogies
+	- [ ] Skip-Gramm Model
     - [ ] take care of outliers 
     - [ ] scaling / standardizing / normalizing
     - [ ] check for duplicate rows
