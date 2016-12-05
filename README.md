@@ -26,7 +26,10 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
 
 - [ ] Code
   - [ ] xx baseline methods implemented and tested
-	- [ ] ADD HERE THE METHODS TO IMPLEMENT
+	- [ ] SGD updates to train the matrix factorization
+	- [ ] Construct feature representation of each training tweet
+	- [ ] Linear Classifier Trainer (logistic regression or SVM, scikit lib)
+	- [ ] Predicter : predict labels for all tweets in the test set
   - [ ] Cross-validation
   - [ ] Bias-Variance decomposition
   - [ ] Correlation check function
@@ -36,6 +39,8 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
   - [ ] make use of ensembling, but last step (combine several models) [reference](http://people.inf.ethz.ch/jaggim/meetup/slides/ML-meetup-9-vonRohr-kaggle.pdf)
   - [ ] Bias-Variance analysis, to improve variance (try smaller sets of features, increase regularization), to improve bias (try getting additional features, try adding polynomial features, decrease regularization)
   - [ ] try different cost functions 
+  - [ ] try other models to improve accuracy and computation speed
+	- [ ] Determine what we want to try
   - [ ] Feature Processing
     - [ ] take care of outliers 
     - [ ] scaling / standardizing / normalizing
