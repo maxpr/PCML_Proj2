@@ -2,6 +2,7 @@
 from scipy.sparse import *
 import numpy as np
 import pandas as pd
+import sklearn.linear_model as sk
 import pickle
 import random
 import re
@@ -54,4 +55,28 @@ def construct_features():
         training_set_neg[:,i+1] = training_set_neg[:,i+1]/word_nbr_per_tweet_neg
     np.save('data/trainingset_pos', training_set_pos)
     np.save('data/trainingset_neg', training_set_neg)
+    
+def predict_labels(data,flag=""):
+    path_neg = str("data/trainingset_neg_"+flag)
+    path_pos = str("data/trainingset_pos_"+flag)
+    ts_neg = np.load(path_neg)
+    ts_pos = np.load(path_pos)    
+    #Train a Linear Classifier: Train a linear classifier (e.g. logistic regression or SVM) on your constructed 
+    #features, using the scikit learn library, or your own code from the earlier labs. Recall that the labels 
+    #indicate if a tweet used to contain a :) or :( smiley.
+    training_set = np.concatenate((ts_neg,ts_pos))
+    y = training_set[:,0]
+    X = training_set[:,1:np.shape(training_set)[1]]
+    LR = sk.LogisticRegression()
+    #LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, 
+    #class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, 
+    #warm_start=False, n_jobs=1)[source]¶
+    #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+    LR.fit(X,y)
+    return LR.predict(data)
+    
+    
+
+    
+    
     
