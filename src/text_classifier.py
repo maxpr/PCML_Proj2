@@ -57,6 +57,8 @@ def construct_features():
     np.save('data/trainingset_neg', training_set_neg)
     
 def predict_labels(data,flag=""):
+    ids = data[:,0]
+    topredict = data[:,1]
     path_neg = str("data/trainingset_neg_"+flag)
     path_pos = str("data/trainingset_pos_"+flag)
     ts_neg = np.load(path_neg)
@@ -73,6 +75,8 @@ def predict_labels(data,flag=""):
     #warm_start=False, n_jobs=1)[source]¶
     #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     LR.fit(X,y)
+    predictions = LR.predict(topredict)
+    
     return LR.predict(data)
     
     
