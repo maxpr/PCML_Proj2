@@ -50,7 +50,7 @@ def construct_features():
                 training_set_neg[j,1:np.shape(embeddings)[1]+1] += current_emb
         i+=1
     #then divide by number of words (averaging word vector over all words of the tweet)
-    for i in range(0,20):
+    for i in range(0,np.shape(embeddings)[1]):
         training_set_pos[:,i+1] = training_set_pos[:,i+1]/word_nbr_per_tweet_pos
         training_set_neg[:,i+1] = training_set_neg[:,i+1]/word_nbr_per_tweet_neg
     np.save('data/trainingset_pos', training_set_pos)
