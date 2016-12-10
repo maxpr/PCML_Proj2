@@ -4,27 +4,25 @@ import numpy as np
 import pickle
 import random
 
+def cost_function(fn, logn, x, y):
+    term1 = np.dot(x,y)
+    term2 = pow(logn-term1,2)
+    return term2*1/2
+
 #solution provided for glove_sgd as glove_solution.
 #uses log(n_dn) as in course
-def glove_SGD():
+def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, epochs = 10, nmax = 100, flags=""):
     print("loading cooccurrence matrix")
     with open('data/cooc.pkl', 'rb') as f:
         cooc = pickle.load(f)
     print("{} nonzero entries".format(cooc.nnz))
 
-    nmax = 100
     print("using nmax =", nmax, ", cooc.max() =", cooc.max())
-
+    print("Parameters : embedding_dim =",embedding_dim,", eta =",eta,", alpha =",alpha,", epochs =",epochs,".")
     print("initializing embeddings")
-    embedding_dim = 20
     xs = np.random.normal(size=(cooc.shape[0], embedding_dim))
     ys = np.random.normal(size=(cooc.shape[1], embedding_dim))
-
-    eta = 0.001
-    alpha = 3 / 4
-
-    epochs = 10
-
+    losses = []
     for epoch in range(epochs):
         print("epoch {}".format(epoch))
         for ix, jy, n in zip(cooc.row, cooc.col, cooc.data):
@@ -34,7 +32,9 @@ def glove_SGD():
             scale = 2 * eta * fn * (logn - np.dot(x, y))
             xs[ix, :] += scale * y
             ys[jy, :] += scale * x
-    np.save('data/embeddings', xs)
+            losses.append(cost_function(fn,logn,x,y))            
+    np.save(str('data/embeddings'+flags), xs)
+    return losses
     
 def glove_template():
     print("NOT WORKING : DO NOT USE YET")
