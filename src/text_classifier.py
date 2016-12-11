@@ -23,13 +23,13 @@ def construct_features():
     word_nbr_per_tweet_pos = np.zeros(np.shape(pos_train)[0])
     for j in range(0,np.shape(pos_train)[0]):
         tweet = pos_train[j]
-        size = len(re.findall(r'\w+', tweet))
+        size = len(tweet.split())
         word_nbr_per_tweet_pos[j] = size
         
     word_nbr_per_tweet_neg = np.zeros(np.shape(neg_train)[0])
     for j in range(0,np.shape(neg_train)[0]):
         tweet = neg_train[j]
-        size = len(re.findall(r'\w+', tweet))
+        size = len(tweet.split())
         word_nbr_per_tweet_neg[j] = size
     
     i=0
