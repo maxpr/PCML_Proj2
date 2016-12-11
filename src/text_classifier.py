@@ -14,23 +14,25 @@ def construct_features():
     (by averaging the word vectors over all words of the tweet).
     '''
     #Load the training tweets and the built GloVe word embeddings.
-    pos_train = open('data/pos_train.txt').readlines()
+        pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
     embeddings = np.load('data/embeddings.npy')
 
     
-    #count number of word/tweet and store it
+    #count number of word/tweet and store it for both positive set and negative set
     word_nbr_per_tweet_pos = np.zeros(np.shape(pos_train)[0])
     for j in range(0,np.shape(pos_train)[0]):
         tweet = pos_train[j]
         size = len(tweet.split())
         word_nbr_per_tweet_pos[j] = size
-        
+    
     word_nbr_per_tweet_neg = np.zeros(np.shape(neg_train)[0])
     for j in range(0,np.shape(neg_train)[0]):
         tweet = neg_train[j]
         size = len(tweet.split())
         word_nbr_per_tweet_neg[j] = size
+    
+    print("counting ended")
     
     i=0
     pos_mask = np.zeros(np.shape(embeddings)[1]+1)
@@ -38,19 +40,26 @@ def construct_features():
     #adding 1 at start : this is target (1 is for happy emoji, 0 or -1 for sad face)
     training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+1))) + pos_mask
     training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+1)))
-    vocab = open('data/vocab_cut.txt')
+    vocab = open('data/vocab_cut_full.txt')
     #for each word, search if it is in pos_train or neg_train
+    prevWord =""
     for word_ in vocab:
         word = word_.split("\n")[0]
+        if(re.escape(word) != word):
+            word= re.escape(word)
         current_emb = embeddings[i]
         for j in range(0,np.shape(pos_train)[0]):
             #if yes, add its embeddings.
-            if word in pos_train[j]:
+            #if word in pos_train[j]:
+            if(re.search(r""+word,pos_train[j])):#regex if escaped character
                 training_set_pos[j,1:np.shape(embeddings)[1]+1] += current_emb
         for j in range(0,np.shape(neg_train)[0]):
-            if word in neg_train[j]:
+            #if word in neg_train[j]:
+            if(re.search(r""+word,neg_train[j])):
                 training_set_neg[j,1:np.shape(embeddings)[1]+1] += current_emb
         i+=1
+        if(i%5000 ==0):
+            print("5000 done")
     #then divide by number of words (averaging word vector over all words of the tweet)
     for i in range(0,np.shape(embeddings)[1]):
         training_set_pos[:,i+1] = training_set_pos[:,i+1]/word_nbr_per_tweet_pos
@@ -138,6 +147,7 @@ def construct_features_for_test_set(test_set_tweet):
     for i in range(0,np.shape(embeddings)[1]):
         test_set[:,i] = test_set[:,i]/word_nbr_per_tweet
     return test_set
+construct_features()
 predict_labels()
 
 
