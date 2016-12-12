@@ -14,7 +14,7 @@ def construct_features():
     (by averaging the word vectors over all words of the tweet).
     '''
     #Load the training tweets and the built GloVe word embeddings.
-        pos_train = open('data/pos_train.txt').readlines()
+    pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
     embeddings = np.load('data/embeddings.npy')
 
@@ -40,22 +40,28 @@ def construct_features():
     #adding 1 at start : this is target (1 is for happy emoji, 0 or -1 for sad face)
     training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+1))) + pos_mask
     training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+1)))
-    vocab = open('data/vocab_cut_full.txt')
+    vocab = open('data/vocab_cut.txt')
     #for each word, search if it is in pos_train or neg_train
     prevWord =""
     for word_ in vocab:
         word = word_.split("\n")[0]
+        #if charac is ecaped, a special regex is used this is why there is a boolean
         if(re.escape(word) != word):
             word= re.escape(word)
         current_emb = embeddings[i]
         for j in range(0,np.shape(pos_train)[0]):
             #if yes, add its embeddings.
             #if word in pos_train[j]:
-            if(re.search(r""+word,pos_train[j])):#regex if escaped character
+            if(prevWord != word):
+                print(word)
+                prevWord=word
+            if(re.search(r"\s"+word+"\s",pos_train[j])):#regex if escaped character
+                if(j < 20):
+                    print(word,pos_train[j])
                 training_set_pos[j,1:np.shape(embeddings)[1]+1] += current_emb
         for j in range(0,np.shape(neg_train)[0]):
             #if word in neg_train[j]:
-            if(re.search(r""+word,neg_train[j])):
+            if(re.search(r"\s"+word+"\s",neg_train[j])):
                 training_set_neg[j,1:np.shape(embeddings)[1]+1] += current_emb
         i+=1
         if(i%5000 ==0):
