@@ -73,7 +73,8 @@ def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, nmax = 100, epochs
         np.save(str('metadata/embeddings_cost'+flags),losses)
         return losses
     if(track_losses==0):
-        np.save(str('metadata/embeddings_cost'+flags),losses)
+        print("Saving!")
+        np.save(str('metadata/embeddings_cost'+flags),cost)
         return cost
     
 def glove_template():

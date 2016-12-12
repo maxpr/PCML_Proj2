@@ -7,6 +7,8 @@ import sklearn.linear_model as sk
 import pickle
 import random
 import re
+from glove_routines import *
+
 
 def create_results():
     embedding_dim = [5, 30, 50, 100, 200]
