@@ -55,14 +55,16 @@ def construct_features():
             if(prevWord != word):
                 print(word)
                 prevWord=word
-            if(re.search(r"\s"+word+"\s",pos_train[j])):#regex if escaped character
+            if re.search(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",pos_train[j]):
+                count = re.findall(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",pos_train[j])
                 if(j < 20):
-                    print(word,pos_train[j])
-                training_set_pos[j,1:np.shape(embeddings)[1]+1] += current_emb
+                    print(word,pos_train[j],len(count))
+                training_set_pos[j,1:np.shape(embeddings)[1]+1] += (len(count)*current_emb)
         for j in range(0,np.shape(neg_train)[0]):
             #if word in neg_train[j]:
-            if(re.search(r"\s"+word+"\s",neg_train[j])):
-                training_set_neg[j,1:np.shape(embeddings)[1]+1] += current_emb
+            if re.search(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",neg_train[j]):
+                count = re.findall(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",neg_train[j])
+                training_set_neg[j,1:np.shape(embeddings)[1]+1] += (len(count)*current_emb)
         i+=1
         if(i%5000 ==0):
             print("5000 done")
