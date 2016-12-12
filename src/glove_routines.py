@@ -9,7 +9,7 @@ def update_cost(cost, fn, x, w, z, newW, newZ):
     cost = cost + 1/2 * fn* pow(x - np.dot(newW, newZ),2)
     return cost
 
-def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, nmax = 100, epochs = 10, track_losses = False, flags=""):
+def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, nmax = 100, epochs = 10, track_losses = -1, flags=""):
     '''
     Create the embeddings.npy (and the embeddings_cost.npy) needed to perform logistic regression later.
     Params :
@@ -71,6 +71,7 @@ def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, nmax = 100, epochs
         np.save(str('metadata/embeddings_cost'+flags),losses)
         return losses
     if(track_losses==0):
+        np.save(str('metadata/embeddings_cost'+flags),losses)
         return cost
     
 def glove_template():
