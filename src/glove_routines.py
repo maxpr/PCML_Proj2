@@ -22,11 +22,13 @@ def glove_SGD(embedding_dim = 20, eta = 0.001, alpha = 3 / 4, nmax = 100, epochs
         flags allows to modify the name of the file created by this function     
     Return : If track_losses = -1, nothing, else if track_losses = 0, only the last loss, and if track_loss>0, the evolution of the loss (array)
     '''
+    #test
     assert track_losses>=-1
     assert alpha>=0
     assert alpha<=1
     assert embedding_dim>0
     assert epochs>0
+    #End of test
     print("loading cooccurrence matrix")
     with open('data/cooc.pkl', 'rb') as f:
         cooc = pickle.load(f)
