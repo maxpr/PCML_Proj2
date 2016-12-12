@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import pandas as pd
 import sklearn.linear_model as sk
+import sklearn.model_selection as ms
 import pickle
 import random
 import re
@@ -72,7 +73,7 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
 
-def predict_labels_2(flag=".npy"):
+def predict_labels(flag=".npy"):
     #Load the training set
     path_neg = str("data/trainingset_neg"+flag)
     path_pos = str("data/trainingset_pos"+flag)
@@ -104,7 +105,7 @@ def predict_labels_2(flag=".npy"):
     #warm_start=False, n_jobs=1)[source]¶
     #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     #train the logistic regressor
-    kf = KFold(n_splits=2,shuffle=True)
+    kf = ms.KFold(n_splits=2,shuffle=True)
     for train_idx, test_idx in kf.split(X):
         train_set = X[train_idx]
         test_set = X[test_idx]
@@ -150,6 +151,3 @@ def construct_features_for_test_set(test_set_tweet):
     for i in range(0,np.shape(embeddings)[1]):
         test_set[:,i] = test_set[:,i]/word_nbr_per_tweet
     return test_set
-predict_labels()
-
-
