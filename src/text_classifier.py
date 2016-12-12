@@ -72,7 +72,7 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
 
-def predict_labels(flag=".npy"):
+def predict_labels_2(flag=".npy"):
     #Load the training set
     path_neg = str("data/trainingset_neg"+flag)
     path_pos = str("data/trainingset_pos"+flag)
@@ -84,15 +84,7 @@ def predict_labels(flag=".npy"):
     training_set = np.concatenate((ts_neg,ts_pos))
     y = training_set[:,0]
     X = training_set[:,1:np.shape(training_set)[1]]
-    #Construct the logistic regressor
-    LR = sk.LogisticRegression()
-    #LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, 
-    #class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, 
-    #warm_start=False, n_jobs=1)[source]¶
-    #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
-    #train the logistic regressor
-    LR.fit(X,y)
-    
+     
     #Now we load and predict the data
     data = np.genfromtxt('data/test_data.txt', delimiter="\n",dtype=str)    
     idx = np.zeros(np.shape(data)[0])
@@ -104,6 +96,26 @@ def predict_labels(flag=".npy"):
         for j in range(2,np.shape(spliter)[0]):
             tweet = tweet+","+spliter[j]
         tweets[i] = tweet
+    
+    #Construct the logistic regressor
+    LR = sk.LogisticRegressionCV()
+    #LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, 
+    #class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, 
+    #warm_start=False, n_jobs=1)[source]¶
+    #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+    #train the logistic regressor
+    kf = KFold(n_splits=2,shuffle=True)
+    for train_idx, test_idx in kf.split(X):
+        train_set = X[train_idx]
+        test_set = X[test_idx]
+        train_target = y[train_idx]
+        test_target = y[test_idx]    
+        LR.fit(train_set,train_target)
+        predictions_temp = LR.predict(test_set)
+        error = sum(pow(predictions_temp-test_target,2))/np.shape(predictions_temp)[0]
+        print("Yet, error is",error)
+    LR.fit(X,y)
+    
     #And now, predict the results
     topredict = construct_features_for_test_set(tweets)
     predictions = LR.predict(topredict)

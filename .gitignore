@@ -1,3 +1,5 @@
 #ignore the big files
 src/data/train_neg_full.txt
 src/data/train_pos_full.txt
+src/data/
+src/metadata
