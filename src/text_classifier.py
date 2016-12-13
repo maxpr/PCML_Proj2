@@ -8,37 +8,55 @@ import sklearn.model_selection as ms
 import pickle
 import random
 import re
+import string
 
 def construct_features():
     '''
     construct a feature representation of each training tweet 
     (by averaging the word vectors over all words of the tweet).
     '''
-    #Load the training tweets and the built GloVe word embeddings.
+    #Load the training tweets and the built GloVe word embeddings
+    
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
     embeddings = np.load('data/embeddings.npy')
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
 
-    pos_mask = np.zeros(np.shape(embeddings)[1]+1)
+    pos_mask = np.zeros(np.shape(embeddings)[1]+4)
     pos_mask[0] +=1
     #adding 1 at start : this is target (1 is for happy emoji, 0 or -1 for sad face)
-    training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+1))) + pos_mask
-    training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+1)))
+    #will add 3 features , number of word , average length of words, and #punctuation
+    training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+4))) + pos_mask
+    training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+4)))
     #for each word, search if it is in pos_train or neg_train
     for j in range(0,np.shape(pos_train)[0]):
+        counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
+        num_punctu = counter(pos_train[j],string.punctuation)
         list_word = pos_train[j].split()
+        average = 0
         for i in list_word:
+            average+=len(i)
             idx = vocab.get(i,-1)
             if(idx>=0):
                 training_set_pos[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
+        training_set_pos[j,1:np.shape(embeddings)[1]+1] = training_set_pos[j,1:np.shape(embeddings)[1]+1]/len(list_word)
+        training_set_pos[j,np.shape(embeddings)[1]+1] = len(list_word) #add the # word
+        training_set_pos[j,np.shape(embeddings)[1]+2] = num_punctu #add the # punctuation
+        training_set_pos[j,np.shape(embeddings)[1]+3] = average/len(list_word) #add length of word in average
     for j in range(0,np.shape(neg_train)[0]):
+        num_punctu = counter(neg_train[j],string.punctuation)
+        average = 0
         list_word = neg_train[j].split()
         for i in list_word:
+            average+=len(i)
             idx = vocab.get(i,-1)
             if(idx>=0):
                 training_set_neg[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
+        training_set_neg[j,1:np.shape(embeddings)[1]+1] = training_set_neg[j,1:np.shape(embeddings)[1]+1]/len(list_word)
+        training_set_neg[j,np.shape(embeddings)[1]+1] = len(list_word) #add the # word
+        training_set_neg[j,np.shape(embeddings)[1]+2] = num_punctu #add the # punctuation
+        training_set_neg[j,np.shape(embeddings)[1]+3] = average/len(list_word) #add length of word in average
     np.save('data/trainingset_pos', training_set_pos)
     np.save('data/trainingset_neg', training_set_neg)
     
@@ -68,8 +86,7 @@ def predict_labels(flag=".npy"):
     training_set = np.concatenate((ts_neg,ts_pos))
     y = training_set[:,0]
     X = training_set[:,1:np.shape(training_set)[1]]
-	
-	
+    
     #Now we load and predict the data
     data = np.genfromtxt('data/test_data.txt', delimiter="\n",dtype=str)    
     idx = np.zeros(np.shape(data)[0])
@@ -113,14 +130,28 @@ def construct_features_for_test_set(test_set_tweet):
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
     
-    test_set = np.zeros((np.shape(test_set_tweet)[0],np.shape(embeddings)[1]))
+    test_set = np.zeros((np.shape(test_set_tweet)[0],np.shape(embeddings)[1]+3))
     #for each word, search if it is in a tweet
     for j in range(0,np.shape(test_set)[0]):
         list_word = test_set_tweet[j].split()
+        divider = 0
+        average = 0
+        counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
+        num_punctu = counter(test_set_tweet[j],string.punctuation)
         for i in list_word:
             idx = vocab.get(i,-1)
+            average+=len(i)
             if(idx>=0):
-                test_set[j,:] += embeddings[idx]
+                divider+=1
+                test_set[j,:np.shape(embeddings)[1]] += embeddings[idx]
+        if(divider >0):
+            test_set[j,:np.shape(embeddings)[1]] = test_set[j,:np.shape(embeddings)[1]]/divider
+        test_set[j,np.shape(embeddings)[1]] = len(list_word) #add the # word
+        test_set[j,np.shape(embeddings)[1]+1] = num_punctu #add the # punctuation
+        if(len(list_word) >0):
+            test_set[j,np.shape(embeddings)[1]+2] = average/len(list_word)#add length of word in average
+        else : 
+            test_set[j,np.shape(embeddings)[1]+2] = 0
     #then divide by number of words (averaging word vector over all words of the tweet)
     return test_set
 construct_features()
