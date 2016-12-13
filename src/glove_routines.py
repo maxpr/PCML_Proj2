@@ -6,7 +6,12 @@ import random
 
 #solution provided for glove_sgd as glove_solution.
 #uses log(n_dn) as in course
+
+
+
+
 def glove_SGD():
+
     print("loading cooccurrence matrix")
     with open('data/cooc.pkl', 'rb') as f:
         cooc = pickle.load(f)
@@ -35,7 +40,11 @@ def glove_SGD():
             xs[ix, :] += scale * y
             ys[jy, :] += scale * x
     np.save('data/embeddings', xs)
-    
+
+
+
+
+
 def glove_template():
     print("NOT WORKING : DO NOT USE YET")
     print("loading cooccurrence matrix")

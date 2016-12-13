@@ -26,12 +26,28 @@ if False:
     dataC.save('../data/neg_train_clean.txt')
     print('done')
 
-
 if False:
 
-    boosting = adaboost('../data/pos_train_clean.txt', '../data/neg_train_clean.txt')
+    dataC = dataCleaning('../data/neg_train_clean.txt')
+    dataC.cutAndSave(0.8,'../data/neg_train_clean_cutTrain.txt','../data/neg_train_clean_cutTest.txt')
+    dataC = dataCleaning('../data/pos_train_clean.txt')
+    dataC.cutAndSave(0.8, '../data/pos_train_clean_cutTrain.txt', '../data/pos_train_clean_cutTest.txt')
+
 
 if True:
+
+
+    boosting = adaboost('../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt')
+
+    negTest = dataCleaning('../data/neg_train_clean_cutTest.txt').getData()
+    posTest = dataCleaning('../data/pos_train_clean_cutTest.txt').getData()
+
+    boosting.learnAndTest(posTest,negTest)
+
+
+
+
+if False:
 
     voc = vocabulary(['../data/pos_train_clean.txt', '../data/neg_train_clean.txt'])
 
@@ -43,6 +59,17 @@ if True:
 
 
 if False:
+
+    print([1 / 5 for i in range(5)])
+
+    array = [[1,2],[2,3]]
+
+    array = sum(array,[])
+
+
+    print(array)
+
+
 
     set1 = set([1,2,3,4])
     set2 = set([1,2,3,4])
