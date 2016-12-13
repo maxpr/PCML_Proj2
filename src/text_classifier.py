@@ -17,61 +17,27 @@ def construct_features():
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
     embeddings = np.load('data/embeddings.npy')
+    with open('data/vocab.pkl', 'rb') as f:
+        vocab = pickle.load(f)
 
-    
-    #count number of word/tweet and store it for both positive set and negative set
-    word_nbr_per_tweet_pos = np.zeros(np.shape(pos_train)[0])
-    for j in range(0,np.shape(pos_train)[0]):
-        tweet = pos_train[j]
-        size = len(tweet.split())
-        word_nbr_per_tweet_pos[j] = size
-    
-    word_nbr_per_tweet_neg = np.zeros(np.shape(neg_train)[0])
-    for j in range(0,np.shape(neg_train)[0]):
-        tweet = neg_train[j]
-        size = len(tweet.split())
-        word_nbr_per_tweet_neg[j] = size
-    
-    print("counting ended")
-    
-    i=0
     pos_mask = np.zeros(np.shape(embeddings)[1]+1)
     pos_mask[0] +=1
     #adding 1 at start : this is target (1 is for happy emoji, 0 or -1 for sad face)
     training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+1))) + pos_mask
     training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+1)))
-    vocab = open('data/vocab_cut.txt')
     #for each word, search if it is in pos_train or neg_train
-    prevWord =""
-    for word_ in vocab:
-        word = word_.split("\n")[0]
-        #if charac is ecaped, a special regex is used this is why there is a boolean
-        if(re.escape(word) != word):
-            word= re.escape(word)
-        current_emb = embeddings[i]
-        for j in range(0,np.shape(pos_train)[0]):
-            #if yes, add its embeddings.
-            #if word in pos_train[j]:
-            if(prevWord != word):
-                print(word)
-                prevWord=word
-            if re.search(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",pos_train[j]):
-                count = re.findall(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",pos_train[j])
-                if(j < 20):
-                    print(word,pos_train[j],len(count))
-                training_set_pos[j,1:np.shape(embeddings)[1]+1] += (len(count)*current_emb)
-        for j in range(0,np.shape(neg_train)[0]):
-            #if word in neg_train[j]:
-            if re.search(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",neg_train[j]):
-                count = re.findall(r"(?:(?:(?:\b)|^)"+word+"(?:(?=\b)|$)|(?:^|(?:\s))"+word+"(?:$|(?=\s)))",neg_train[j])
-                training_set_neg[j,1:np.shape(embeddings)[1]+1] += (len(count)*current_emb)
-        i+=1
-        if(i%5000 ==0):
-            print("5000 done")
-    #then divide by number of words (averaging word vector over all words of the tweet)
-    for i in range(0,np.shape(embeddings)[1]):
-        training_set_pos[:,i+1] = training_set_pos[:,i+1]/word_nbr_per_tweet_pos
-        training_set_neg[:,i+1] = training_set_neg[:,i+1]/word_nbr_per_tweet_neg
+    for j in range(0,np.shape(pos_train)[0]):
+        list_word = pos_train[j].split()
+        for i in list_word:
+            idx = vocab.get(i,-1)
+            if(idx>=0):
+                training_set_pos[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
+    for j in range(0,np.shape(neg_train)[0]):
+        list_word = neg_train[j].split()
+        for i in list_word:
+            idx = vocab.get(i,-1)
+            if(idx>=0):
+                training_set_neg[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
     np.save('data/trainingset_pos', training_set_pos)
     np.save('data/trainingset_neg', training_set_neg)
     
@@ -109,7 +75,7 @@ def predict_labels(flag=".npy"):
     #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     #train the logistic regressor
     LR.fit(X,y)
-    
+
     #Now we load and predict the data
     data = np.genfromtxt('data/test_data.txt', delimiter="\n",dtype=str)    
     idx = np.zeros(np.shape(data)[0])
@@ -130,32 +96,19 @@ def predict_labels(flag=".npy"):
 
 def construct_features_for_test_set(test_set_tweet):
     embeddings = np.load('data/embeddings.npy')
-    word_nbr_per_tweet = np.zeros(np.shape(test_set_tweet)[0])
+    with open('data/vocab.pkl', 'rb') as f:
+        vocab = pickle.load(f)
     
-    for j in range(0,np.shape(test_set_tweet)[0]):
-        tweet = test_set_tweet[j]
-        size = len(re.findall(r'\w+', tweet))
-        if(size==0):
-            size=1
-        word_nbr_per_tweet[j] = size
-    
-    vocab = open('data/vocab_cut.txt')
-    test_set = np.zeros(((np.shape(test_set_tweet)[0],np.shape(embeddings)[1])))
+    test_set = np.zeros((np.shape(test_set_tweet)[0],np.shape(embeddings)[1]))
     #for each word, search if it is in a tweet
-    i=0
-    for word_ in vocab:
-        word = word_.split("\n")[0]
-        current_emb = embeddings[i]
-        for j in range(0,50):
-            #if yes, add its embeddings.
-            if word in test_set_tweet[j]:
-                test_set[j,:] += current_emb
-        i+=1
+    for j in range(0,np.shape(test_set)[0]):
+        list_word = test_set_tweet[j].split()
+        for i in list_word:
+            idx = vocab.get(i,-1)
+            if(idx>=0):
+                test_set[j,:] += embeddings[idx]
     #then divide by number of words (averaging word vector over all words of the tweet)
-    for i in range(0,np.shape(embeddings)[1]):
-        test_set[:,i] = test_set[:,i]/word_nbr_per_tweet
     return test_set
-construct_features()
 predict_labels()
 
 
