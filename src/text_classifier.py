@@ -29,16 +29,24 @@ def construct_features():
     #for each word, search if it is in pos_train or neg_train
     for j in range(0,np.shape(pos_train)[0]):
         list_word = pos_train[j].split()
+        divider = 0
         for i in list_word:
             idx = vocab.get(i,-1)
             if(idx>=0):
+                divider+=1
                 training_set_pos[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
+        if(divider >0):
+            training_set_pos[j,1:np.shape(embeddings)[1]+1] = training_set_pos[j,1:np.shape(embeddings)[1]+1]/divider
     for j in range(0,np.shape(neg_train)[0]):
         list_word = neg_train[j].split()
+        divider = 0
         for i in list_word:
             idx = vocab.get(i,-1)
             if(idx>=0):
+                divider+=1
                 training_set_neg[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
+        if(divider >0):
+            training_set_neg[j,1:np.shape(embeddings)[1]+1] = training_set_neg[j,1:np.shape(embeddings)[1]+1]/divider
     np.save('data/trainingset_pos', training_set_pos)
     np.save('data/trainingset_neg', training_set_neg)
     
@@ -68,8 +76,7 @@ def predict_labels(flag=".npy"):
     training_set = np.concatenate((ts_neg,ts_pos))
     y = training_set[:,0]
     X = training_set[:,1:np.shape(training_set)[1]]
-	
-	
+    
     #Now we load and predict the data
     data = np.genfromtxt('data/test_data.txt', delimiter="\n",dtype=str)    
     idx = np.zeros(np.shape(data)[0])
@@ -117,10 +124,14 @@ def construct_features_for_test_set(test_set_tweet):
     #for each word, search if it is in a tweet
     for j in range(0,np.shape(test_set)[0]):
         list_word = test_set_tweet[j].split()
+        divider = 0
         for i in list_word:
             idx = vocab.get(i,-1)
             if(idx>=0):
+                divider+=1
                 test_set[j,:] += embeddings[idx]
+        if(divider >0):
+            test_set[j,:] = test_set[j,:]/divider
     #then divide by number of words (averaging word vector over all words of the tweet)
     return test_set
 construct_features()
