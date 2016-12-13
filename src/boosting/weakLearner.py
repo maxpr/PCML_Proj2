@@ -7,10 +7,12 @@ class weakLearner:
 
 
     def __init__(self, wordIds, labels, weight = 1):
-
+        print(wordIds)
         self.wordIds = wordIds
         self.weight = weight
         self.labels = labels
+        self.totalPos = len([l for l in labels if l == 1])
+        self.totalNeg = len(labels)-self.totalPos
 
 
 
@@ -28,7 +30,11 @@ class weakLearner:
 
         for (word,label) in zip(self.wordIds, self.labels):
             if word in givenWordIds:
-                value = value + label
+                if label == 1:
+                    value = value + label/self.totalPos
+                else:
+                    value = value + label/self.totalNeg
+
 
         if value<0:
             return -self.weight

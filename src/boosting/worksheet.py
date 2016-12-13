@@ -86,3 +86,11 @@ if False:
 
 
 
+if False:
+
+    dataC = dataCleaning('../data/test_data.txt')
+    dataC.setRemoveTestTweetId()
+    dataC.setTweetTransform()
+    dataC.save('../data/test_data_clean.txt')
+
+

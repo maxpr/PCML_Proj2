@@ -12,7 +12,7 @@ class vocabulary:
     param1 : all the paths to the files that have to be parsed
     param2 : occurrences threshold needed by word to appear in the vocabulary
     """
-    def __init__(self, paths, minOccurenceThreshold=10):
+    def __init__(self, paths, minOccurenceThreshold=100):
 
         words = []
 
@@ -91,7 +91,11 @@ class vocabulary:
     """
     def removeKeys(self, wordIds):
 
-        for (wordId, word) in self.wordToId.items():
+        """TODO"""
+        words = set()
+        for (word, wordId) in self.wordToId.items():
             if wordId in wordIds:
-                del self.wordToId[wordId]
+                words.add(word)
 
+        for word in words:
+            del self.wordToId[word]

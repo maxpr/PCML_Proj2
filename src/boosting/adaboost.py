@@ -62,7 +62,8 @@ class adaboost:
 
         for wordId in nextWordIds:
             myWordIds.append(wordId)
-            myLabels.append(self.trainset.getLabelIndicator(wordId))
+            res = self.trainset.getLabelIndicator(wordId)
+            myLabels.append(res)
 
         return weakLearner(myWordIds, myLabels)
 
@@ -80,7 +81,10 @@ class adaboost:
 
         while curr_err < 0.5:
 
-            wLearner.setWeight( 0.5 * math.log((1-curr_err)/max([curr_err,0.01])) )
+            if curr_err < 0.01:
+                curr_err = 0.05
+
+            wLearner.setWeight( 0.5 * math.log((1-curr_err)/curr_err) )
             self.weakLearnerLs.append(wLearner)
 
             print("update...\n")
@@ -113,7 +117,22 @@ class adaboost:
 
             i = i + 1
 
-            wLearner.setWeight( 0.5 * math.log((1-curr_err)/max([curr_err,0.01])) )
+            if curr_err < 0.01:
+                curr_err = 0.05
+
+            """
+            print("======================================\n")
+            print(len(wLearner.getWordIds()))
+            print("indicator used : ")
+            print(wLearner.getWordIds())
+            print("\n")
+            print("curr err : "+str(curr_err)+" \n")
+            print("setting weight : " + str(0.5 * math.log((1-curr_err)/max([curr_err,0.01])) )+"\n")
+            print("======================================\n")
+            """
+
+            wLearner.setWeight( 0.5 * math.log((1-curr_err)/curr_err) )
+
             self.weakLearnerLs.append(wLearner)
 
             print("update...\n")
@@ -131,11 +150,12 @@ class adaboost:
             curr_err = self.trainset.getError(wLearner)
 
 
-            if i%20 == 0:
+            if i%10 == 0:
                 print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest,negTweetsTest)) )
 
 
-
+        print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest, negTweetsTest)))
+        print([wL.getWeight() for wL in self.weakLearnerLs])
 
 
 
@@ -163,7 +183,7 @@ class adaboost:
 
     def predictLabel(self, tweet):
 
-        words = tweet.split('\n')
+        words = tweet.split(' ')
 
         """TODO : self.dataClean.setTweetTransform(tweet).split(' ')"""
 
@@ -176,8 +196,14 @@ class adaboost:
         result = 0
 
         for wLearner in self.weakLearnerLs:
-            print()
             result = result + wLearner.getClassification(wordsId)
+
+        """
+        print(wordsId)
+        print( [wL.getWeight() for wL in self.weakLearnerLs] )
+
+        print(" res : "+str(result)+"\n")
+        """
 
         if result < 0:
             return -1

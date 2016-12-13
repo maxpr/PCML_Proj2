@@ -60,6 +60,7 @@ class trainset:
             currentTweetId = currentTweetId + 1
 
         self.size = currentTweetId
+
         negfile.close()
         posfile.close()
 
@@ -88,7 +89,7 @@ class trainset:
     """
     def getGivenLabel(self, tweetId):
 
-        if tweetId < self.firstNegId :
+        if tweetId < self.firstNegId:
             return 1
         else:
             return -1
@@ -99,6 +100,12 @@ class trainset:
     return the adaboost weight of corresponding training exemple
     """
     def getWeight(self, tweetId):
+
+        """
+        print("tweet id : "+ str(tweetId)+"\n")
+        print("size : " + str(len(self.tweetWeight))+"\n")
+        """
+
         return self.tweetWeight[tweetId]
 
 
@@ -125,6 +132,17 @@ class trainset:
 
         negClassificationError = sum([self.getWeight(tweetId) for tweetId in posLs])
         posClassificationError = sum([self.getWeight(tweetId) for tweetId in negLs])
+
+        """
+        print("\n")
+        print("size : " + str(len(relativeTweetIdLs)))
+        print("neg :"+str(len(posLs)))
+        print([self.getWeight(tweetId) for tweetId in posLs])
+        print(negClassificationError)
+        print("pos :" + str(len(negLs)))
+        print(posClassificationError)
+        print("\n")
+        """
 
         if negClassificationError < posClassificationError:
             return -1
@@ -166,13 +184,22 @@ class trainset:
         relativeTweetIdSet = [self.wordToTweets[wordId] for wordId in weakLearner.getWordIds()]
         relativeTweetIdSet = set(sum(relativeTweetIdSet, []))
 
-        Z = max([2*math.sqrt(err*(1-err)),0.01])
+        Z = 2*math.sqrt(err*(1-err))
 
         for tweetId in relativeTweetIdSet:
 
-            expValue = -weakLearner.weight*self.getGivenLabel(tweetId)*weakLearner.getClassification(self.tweetToWords[tweetId])
+
+            weakLearnerClass = 0
+            if weakLearner.getClassification(self.tweetToWords[tweetId]) < 0:
+                weakLearnerClass = -1
+            else:
+                weakLearnerClass = 1
+
+            expValue = -weakLearner.weight*self.getGivenLabel(tweetId)*weakLearnerClass
 
             value = math.exp(expValue)/Z
+
+            """print("update weight of tweet n°"+str(tweetId)+" multiplied by : " + str(value)+"\n")"""
 
             self.tweetWeight[tweetId] = self.tweetWeight[tweetId]*value
 
@@ -195,8 +222,10 @@ class trainset:
             posΩ = sum([self.getWeight(tweetId) for tweetId in tweetIds if self.getGivenLabel(tweetId) == -1])
 
             if posΩ < negΩ:
+                """print("update word indicator to " + str(posΩ))"""
                 self.Ω_cache[wordId] = posΩ
             else:
+                """print("update word indicator to " + str(negΩ))"""
                 self.Ω_cache[wordId] = negΩ
 
 
