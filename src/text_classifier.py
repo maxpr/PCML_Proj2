@@ -11,6 +11,7 @@ import random
 import re
 import string
 
+<<<<<<< HEAD
 #This method construct the features of each tweets
 def construct_vectors(data,set_to_fill,vocab,embeddings):
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
@@ -45,6 +46,9 @@ def construct_vectors(data,set_to_fill,vocab,embeddings):
         set_to_fill[j,np.shape(embeddings)[1]+6] = num3point #number of ...
     return set_to_fill
 def construct_features(embeddings_path='data/embeddings.npy',saving_flag=""):
+=======
+def construct_features():
+>>>>>>> 5125ac3c49671c7738cf6e1388945545270ac2bf
     '''
     construct a feature representation of each training tweet 
     (by averaging the word vectors over all words of the tweet).
@@ -54,9 +58,13 @@ def construct_features(embeddings_path='data/embeddings.npy',saving_flag=""):
 
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
+<<<<<<< HEAD
     embeddings = np.load(embeddings_path)
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
+=======
+    embeddings = np.load('data/embeddings.npy')
+>>>>>>> 5125ac3c49671c7738cf6e1388945545270ac2bf
 
     pos_mask = np.zeros(np.shape(embeddings)[1]+1+additional_features)
     pos_mask[0] +=1
