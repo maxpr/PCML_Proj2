@@ -9,7 +9,7 @@ import pickle
 import random
 import re
 
-def construct_features():
+def construct_features(flags=""):
     '''
     construct a feature representation of each training tweet 
     (by averaging the word vectors over all words of the tweet).
@@ -17,7 +17,7 @@ def construct_features():
     #Load the training tweets and the built GloVe word embeddings.
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
-    embeddings = np.load('data/embeddings.npy')
+    embeddings = np.load(str('data/embeddings')+flags+".npy")
 
     
     #count number of word/tweet and store it
