@@ -124,3 +124,53 @@ def show_graph():
     plt.axis([min(ys)*0.9,max(ys)*1.1,min(zs)*0.9,max(zs)*1.1])
 
     plt.plot(ys,zs,'yo')
+    
+def test_embeddings(flag=""):
+    #Load the training set
+    path_neg = str("data/trainingset_neg"+flag+".npy")
+    path_pos = str("data/trainingset_pos"+flag+".npy")
+    ts_neg = np.load(path_neg)
+    ts_pos = np.load(path_pos)    
+    #Train a Linear Classifier: Train a linear classifier (e.g. logistic regression or SVM) on your constructed 
+    #features, using the scikit learn library, or your own code from the earlier labs. Recall that the labels 
+    #indicate if a tweet used to contain a :) or :( smiley.
+    training_set = np.concatenate((ts_neg,ts_pos))
+    y = training_set[:,0]
+    X = training_set[:,1:np.shape(training_set)[1]]
+    X = build_poly(X,2)
+    
+    #Construct the logistic regressor
+    LR = sk.LogisticRegressionCV()
+    #LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, 
+    #class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, 
+    #warm_start=False, n_jobs=1)[source]¶
+    #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+    #train the logistic regressor
+    nsplits = 5
+    average_error=0
+    kf = ms.KFold(n_splits=nsplits,shuffle=True)
+    for train_idx, test_idx in kf.split(X):
+        train_set = X[train_idx]
+        test_set = X[test_idx]
+        train_target = y[train_idx]
+        test_target = y[test_idx]    
+        LR.fit(train_set,train_target)
+        predictions_temp = LR.predict(test_set)
+        error = np.sum(np.power(predictions_temp-test_target,2))/np.shape(predictions_temp)[0]
+        average_error+=error
+    average_error = average_error/nsplits
+    return average_error
+
+
+def test_all_embeddings():
+    for subdir, dirs, files in os.walk('embeddings'):
+        i=0
+        for file in files:
+            i+=1
+            flag = str("_test_"+str(i))
+            print("Constructing features for",file)
+            construct_features('embeddings/'+str(file),flag)
+            print("   Calculation error")
+            error = test_embeddings(flag)
+            print("   For file : ",file)
+            print("   Error is:",error)

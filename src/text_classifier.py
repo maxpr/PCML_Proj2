@@ -11,7 +11,6 @@ import random
 import re
 import string
 
-<<<<<<< HEAD
 #This method construct the features of each tweets
 def construct_vectors(data,set_to_fill,vocab,embeddings):
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
@@ -45,10 +44,8 @@ def construct_vectors(data,set_to_fill,vocab,embeddings):
         set_to_fill[j,np.shape(embeddings)[1]+5] = num_aux_neg #word in a list of negative aux
         set_to_fill[j,np.shape(embeddings)[1]+6] = num3point #number of ...
     return set_to_fill
+
 def construct_features(embeddings_path='data/embeddings.npy',saving_flag=""):
-=======
-def construct_features():
->>>>>>> 5125ac3c49671c7738cf6e1388945545270ac2bf
     '''
     construct a feature representation of each training tweet 
     (by averaging the word vectors over all words of the tweet).
@@ -58,13 +55,10 @@ def construct_features():
 
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
-<<<<<<< HEAD
+
     embeddings = np.load(embeddings_path)
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
-=======
-    embeddings = np.load('data/embeddings.npy')
->>>>>>> 5125ac3c49671c7738cf6e1388945545270ac2bf
 
     pos_mask = np.zeros(np.shape(embeddings)[1]+1+additional_features)
     pos_mask[0] +=1
@@ -75,8 +69,8 @@ def construct_features():
     
     training_set_pos = construct_vectors(pos_train,training_set_pos,vocab,embeddings) #Construct the two training set
     training_set_neg = construct_vectors(neg_train,training_set_neg,vocab,embeddings)
-    np.save("data/trainingset_pos"+saving_flags, training_set_pos)
-    np.save("data/trainingset_neg"+saving_flags, training_set_neg)
+    np.save("data/trainingset_pos"+saving_flag, training_set_pos)
+    np.save("data/trainingset_neg"+saving_flag, training_set_neg)
     
 def create_csv_submission(ids, y_pred, name):
     """
@@ -124,7 +118,9 @@ def predict_labels(flag=".npy"):
     #warm_start=False, n_jobs=1)[source]¶
     #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     #train the logistic regressor
-    kf = ms.KFold(n_splits=5,shuffle=True)
+    nsplits = 5
+    average_error=0
+    kf = ms.KFold(nsplits=5,shuffle=True)
     for train_idx, test_idx in kf.split(X):
         train_set = X[train_idx]
         test_set = X[test_idx]
@@ -132,10 +128,8 @@ def predict_labels(flag=".npy"):
         test_target = y[test_idx]    
         LR.fit(train_set,train_target)
         predictions_temp = LR.predict(test_set)
-        print(predictions_temp.shape)
-        print(test_target.shape)        
-        error = np.sum(np.power(predictions_temp-test_target,2))/np.shape(predictions_temp)[0]
-        print("Yet, error is",error)
+        average_error += np.sum(np.power(predictions_temp-test_target,2))/np.shape(predictions_temp)[0]
+    print("Error is :",average_error/nsplits)
     LR.fit(X,y)
     
     #And now, predict the results
@@ -189,3 +183,10 @@ def construct_features_for_test_set(test_set_tweet,embeddings_path='data/embeddi
         test_set[j,np.shape(embeddings)[1]+5] = num3point
     #then divide by number of words (averaging word vector over all words of the tweet)
     return test_set
+
+def build_poly(x, degree):
+    """polynomial basis functions for input data x, for j=0 up to j=degree."""
+    poly = np.ones((len(x), 1))
+    for deg in range(1, degree+1):
+        poly = np.c_[poly, np.power(x, deg)]
+    return poly
