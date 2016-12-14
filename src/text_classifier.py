@@ -11,10 +11,11 @@ import random
 import re
 import string
 
+#This method construct the features of each tweets
 def construct_vectors(data,set_to_fill,vocab,embeddings):
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
-    counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
+    counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
     
     
     for j in range(0,np.shape(data)[0]):
@@ -26,7 +27,7 @@ def construct_vectors(data,set_to_fill,vocab,embeddings):
         num_aux_neg =0
         for i in list_word:
             average+=len(i)
-            if(i=="..."):
+            if(i=="..."): 
                 num3point+=1
             if(i in list_auxiliarry_pos):
                 num_aux_pos+=1
@@ -35,7 +36,7 @@ def construct_vectors(data,set_to_fill,vocab,embeddings):
             idx = vocab.get(i,-1)
             if(idx>=0):
                 set_to_fill[j,1:np.shape(embeddings)[1]+1] += embeddings[idx]
-        set_to_fill[j,1:np.shape(embeddings)[1]+1] = set_to_fill[j,1:np.shape(embeddings)[1]+1]/len(list_word)
+        set_to_fill[j,1:np.shape(embeddings)[1]+1] = set_to_fill[j,1:np.shape(embeddings)[1]+1]/len(list_word) #put the average of the word vector in dim [1,21]
         set_to_fill[j,np.shape(embeddings)[1]+1] = len(list_word) #add the # word
         set_to_fill[j,np.shape(embeddings)[1]+2] = num_punctu #add the # punctuation
         set_to_fill[j,np.shape(embeddings)[1]+3] = average/len(list_word) #add length of word in average
@@ -63,9 +64,8 @@ def construct_features():
     #will add 3 features , number of word , average length of words, and #punctuation
     training_set_pos = np.zeros(((np.shape(pos_train)[0],np.shape(embeddings)[1]+1+additional_features))) + pos_mask
     training_set_neg = np.zeros(((np.shape(neg_train)[0],np.shape(embeddings)[1]+1+additional_features)))
-    #for each word, search if it is in pos_train or neg_train
     
-    training_set_pos = construct_vectors(pos_train,training_set_pos,vocab,embeddings) #look at method above
+    training_set_pos = construct_vectors(pos_train,training_set_pos,vocab,embeddings) #Construct the two training set
     training_set_neg = construct_vectors(neg_train,training_set_neg,vocab,embeddings)
     np.save('data/trainingset_pos', training_set_pos)
     np.save('data/trainingset_neg', training_set_neg)
@@ -146,7 +146,7 @@ def construct_features_for_test_set(test_set_tweet):
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
     test_set = np.zeros((np.shape(test_set_tweet)[0],np.shape(embeddings)[1]+additional_features))
-    #for each word, search if it is in a tweet
+    #Do the same as the training set, but do not have the label at first , so method is a little different
     for j in range(0,np.shape(test_set)[0]):
         list_word = test_set_tweet[j].split()
         divider = 0
