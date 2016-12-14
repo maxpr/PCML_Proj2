@@ -44,7 +44,7 @@ def construct_vectors(data,set_to_fill,vocab,embeddings):
         set_to_fill[j,np.shape(embeddings)[1]+5] = num_aux_neg #word in a list of negative aux
         set_to_fill[j,np.shape(embeddings)[1]+6] = num3point #number of ...
     return set_to_fill
-def construct_features():
+def construct_features(embeddings_path='data/embeddings.npy',saving_flag=""):
     '''
     construct a feature representation of each training tweet 
     (by averaging the word vectors over all words of the tweet).
@@ -54,7 +54,7 @@ def construct_features():
 
     pos_train = open('data/pos_train.txt').readlines()
     neg_train = open('data/neg_train.txt').readlines()
-    embeddings = np.load('data/embeddings.npy')
+    embeddings = np.load(embeddings_path)
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
 
@@ -67,8 +67,8 @@ def construct_features():
     
     training_set_pos = construct_vectors(pos_train,training_set_pos,vocab,embeddings) #Construct the two training set
     training_set_neg = construct_vectors(neg_train,training_set_neg,vocab,embeddings)
-    np.save('data/trainingset_pos', training_set_pos)
-    np.save('data/trainingset_neg', training_set_neg)
+    np.save("data/trainingset_pos"+saving_flags, training_set_pos)
+    np.save("data/trainingset_neg"+saving_flags, training_set_neg)
     
 def create_csv_submission(ids, y_pred, name):
     """
@@ -138,8 +138,8 @@ def predict_labels(flag=".npy"):
     predictions = predictions*2-1
     create_csv_submission(idx,predictions,"submission.csv")
 
-def construct_features_for_test_set(test_set_tweet):
-    embeddings = np.load('data/embeddings.npy')
+def construct_features_for_test_set(test_set_tweet,embeddings_path='data/embeddings.npy'):
+    embeddings = np.load(embeddings_path)
     with open('data/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
     additional_features = 6
