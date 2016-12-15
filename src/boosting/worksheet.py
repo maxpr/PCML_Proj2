@@ -82,11 +82,11 @@ if True:
 
 if False:
 
-    voc = vocabulary(['../data/pos_train_clean.txt', '../data/neg_train_clean.txt'])
+    voc = vocabulary.createVocabulary(['../data/pos_train_clean.txt', '../data/neg_train_clean.txt'])
 
     print(str(voc.size()))
 
-    voc = vocabulary(['../data/pos_train_clean_full.txt', '../data/neg_train_clean_full.txt'])
+    voc = vocabulary.createVocabulary(['../data/pos_train_clean_full.txt', '../data/neg_train_clean_full.txt'])
 
     print(str(voc.size()))
 

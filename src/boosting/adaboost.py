@@ -2,6 +2,7 @@ from src.boosting.trainset import trainset
 from src.boosting.vocabulary import vocabulary
 from src.dataCleaning import  dataCleaning
 import math
+import time
 
 from src.boosting.weakLearner import weakLearner
 
@@ -18,7 +19,7 @@ class adaboost:
     def __init__(self, pathToPosTrainFile, pathToNegTrainFile, wordsByWeakLearner=100):
 
 
-        self.vocabulary = vocabulary([pathToPosTrainFile,pathToNegTrainFile])
+        self.vocabulary = vocabulary.createVocabulary([pathToPosTrainFile,pathToNegTrainFile])
 
         self.trainset = trainset(self.vocabulary, pathToPosTrainFile, pathToNegTrainFile)
 
@@ -75,7 +76,6 @@ class adaboost:
                     else :
                         wrongClass = wrongClass + 1
 
-            print(str(rightClass + wrongClass) + " has success : " + str(rightClass/(rightClass+wrongClass)))
 
         myWordIds = []
         myLabels = []
@@ -85,49 +85,9 @@ class adaboost:
             res = self.trainset.get_teta_label(wordId)
             myLabels.append(res)
 
-        for (wordId, label) in zip(myWordIds, myLabels):
-            tweetIds = self.trainset.getTweetIdContaining(wordId)
-            tweetLabels = [self.trainset.getGivenLabel(tweetId) for tweetId in tweetIds]
-            goodPreds = [l for l in tweetLabels if l == label]
-            print(str(len(tweetLabels)) + "==> " + str(len(goodPreds)/len(tweetLabels)))
-
-
 
         return weakLearner(myWordIds, myLabels)
 
-
-
-
-
-
-    def __learn(self):
-
-
-        wLearner = self.getNextWeakLearner()
-        curr_err = self.trainset.getError(wLearner)
-
-
-        while curr_err < 0.5:
-
-            if curr_err < 0.01:
-                curr_err = 0.05
-
-            wLearner.setWeight( 0.5 * math.log((1-curr_err)/curr_err) )
-            self.weakLearnerLs.append(wLearner)
-
-            print("update...\n")
-            modifiedWeight_tweetId = self.trainset.setUpdateWeight(wLearner,curr_err)
-
-            self.trainset.setUpdatetetacache(modifiedWeight_tweetId)
-
-            print("update : done\n")
-            self.vocabulary.removeKeys(wLearner.getWordIds())
-
-            if(self.vocabulary.size() == 0):
-                break
-
-            wLearner = self.getNextWeakLearner()
-            curr_err = self.trainset.getError(wLearner)
 
 
 
@@ -138,28 +98,16 @@ class adaboost:
 
         wLearner = self.getNextWeakLearner()
         curr_err = self.trainset.getError(wLearner)
+        local_voc = self.vocabulary
 
-        i = 0
+
 
         while curr_err < 0.5:
-
-            i = i + 1
 
             minThreshold = 0.05
             if curr_err < minThreshold:
                 curr_err = minThreshold
 
-
-            """
-            print("======================================\n")
-            print(len(wLearner.getWordIds()))
-            print("indicator used : ")
-            print(wLearner.getWordIds())
-            print("\n")
-            print("curr err : "+str(curr_err)+" \n")
-            print("setting weight : " + str(0.5 * math.log((1-curr_err)/max([curr_err,0.01])) )+"\n")
-            print("======================================\n")
-            """
 
             wLearner.setWeight(0.5 * math.log((1-curr_err)/curr_err))
 
@@ -171,17 +119,13 @@ class adaboost:
             self.trainset.setUpdatetetacache(modifiedWeight_tweetId)
 
             print("update : done\n")
-            self.vocabulary.removeKeys(wLearner.getWordIds())
+            local_voc = local_voc.removeKeys(wLearner.getWordIds())
 
-            if(self.vocabulary.size() == 0):
+            if(local_voc.size() == 0):
                 break
 
-            wLearner = self.getNextWeakLearner()
-            curr_err = self.trainset.getError(wLearner)
+            print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest,negTweetsTest)))
 
-
-            if i%1 == 0:
-                print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest,negTweetsTest)) )
 
 
         print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest, negTweetsTest)))

@@ -11,7 +11,7 @@ if False:
 
 
 
-    vocabulary = vocabulary(['../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt'])
+    vocabulary = vocabulary.createVocabulary(['../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt'])
 
     trainData = trainset(vocabulary,
                         '../data/pos_train_clean_cutTrain.txt',
@@ -213,9 +213,9 @@ if False:
 
 
 
-if True:
+if False:
 
-    vocabulary = vocabulary(['../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt'])
+    vocabulary = vocabulary.createVocabulary(['../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt'])
 
     boosting = adaboost('../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt')
 
@@ -263,6 +263,53 @@ if True:
 
 
 
+
+if True:
+
+    vocabulary = vocabulary.createVocabulary(['../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt'])
+
+    boosting = adaboost('../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt')
+
+
+    posTrain = dataCleaning('../data/pos_train_clean_cutTrain.txt').getData()
+    negTrain = dataCleaning('../data/neg_train_clean_cutTrain.txt').getData()
+
+    allData = posTrain[:]
+
+    firstNegId = len(allData)
+
+    for negTweet in negTrain:
+        allData.append(negTweet)
+
+
+    boosting.learnAndTest(posTrain,negTrain)
+
+    print(len(boosting.weakLearnerLs))
+    wL = boosting.weakLearnerLs[0]
+
+
+    rightClass = 0
+    wrongClass = 0
+
+    for tweet in posTrain:
+        wIds = set([ vocabulary.getId(word) for word in tweet.strip().split(' ') if vocabulary.has(word)])
+        pred = wL.getClassification(wIds)
+        if pred > 0:
+            rightClass = rightClass + 1
+        else:
+            wrongClass = wrongClass + 1
+
+
+    for tweet in negTrain:
+        wIds = set([ vocabulary.getId(word) for word in tweet.strip().split(' ') if vocabulary.has(word)])
+        pred = wL.getClassification(wIds)
+        if pred < 0:
+            rightClass = rightClass + 1
+        else:
+            wrongClass = wrongClass + 1
+
+
+    print("===> " + str(rightClass/(rightClass+wrongClass)))
 
 
 

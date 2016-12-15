@@ -12,13 +12,17 @@ class vocabulary:
     param1 : all the paths to the files that have to be parsed
     param2 : occurrences threshold needed by word to appear in the vocabulary
     """
-    def __init__(self, paths, minOccurenceThreshold=50):
+    def __init__(self, wordToId):
 
-        self.wordToId = {}
+        self.wordToId = wordToId
+
+
+    @staticmethod
+    def createVocabulary(pathToFiles, minOccThreshold = 50):
 
         wordToOcc = {}
 
-        for pathToFile in paths:
+        for pathToFile in pathToFiles:
             file = open(pathToFile)
             for tweet in file:
                 """  TODO : could be considered out set"""
@@ -32,10 +36,15 @@ class vocabulary:
 
 
         freshId = 0
+
+        wordToId = {}
+
         for (word, occ) in wordToOcc.items():
-            if occ >= minOccurenceThreshold:
-                self.wordToId[word] = freshId
+            if occ >= minOccThreshold:
+                wordToId[word] = freshId
                 freshId = freshId + 1
+
+        return vocabulary(wordToId)
 
 
 
@@ -79,10 +88,9 @@ class vocabulary:
     def removeKeys(self, wordIds):
 
         """TODO"""
-        words = set()
-        for (word, wordId) in self.wordToId.items():
-            if wordId in wordIds:
-                words.add(word)
+        wordToId = {}
+        for (word, id) in self.wordToId.items():
+            if id not in wordIds:
+                wordToId[word] = id
 
-        for word in words:
-            del self.wordToId[word]
+        return vocabulary(wordToId)
