@@ -3,6 +3,23 @@ from src.boosting.adaboost import adaboost
 from functools import reduce
 from src.boosting.vocabulary import vocabulary
 
+
+
+if False:
+
+
+    one = {}
+
+    one[1] = 1
+    one[2] = 2
+
+    two = one.copy()
+
+    two[2] = 4
+
+    print(one)
+    print(two)
+
 if False:
 
     dataC = dataCleaning('../data/pos_train.txt')
@@ -34,15 +51,31 @@ if False:
     dataC.cutAndSave(0.8, '../data/pos_train_clean_cutTrain.txt', '../data/pos_train_clean_cutTest.txt')
 
 
+if False:
+
+    one = set([1,2,3])
+    two = set([4,5,6])
+
+    three = [one,two]
+
+    four = reduce( ( lambda x,y: x.union(y) ),three)
+
+    print(one)
+    print(two)
+
+    print(four)
+
+
+
 if True:
 
 
     boosting = adaboost('../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt')
 
-    negTest = dataCleaning('../data/neg_train_clean_cutTest.txt').getData()
-    posTest = dataCleaning('../data/pos_train_clean_cutTest.txt').getData()
+    negTest = dataCleaning('../data/neg_train_clean_cutTrain.txt').getData()
+    posTest = dataCleaning('../data/pos_train_clean_cutTrain.txt').getData()
 
-    boosting.learnAndTest(posTest,negTest)
+    boosting.learnAndTest(posTest, negTest)
 
 
 

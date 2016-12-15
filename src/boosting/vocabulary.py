@@ -12,43 +12,30 @@ class vocabulary:
     param1 : all the paths to the files that have to be parsed
     param2 : occurrences threshold needed by word to appear in the vocabulary
     """
-    def __init__(self, paths, minOccurenceThreshold=100):
+    def __init__(self, paths, minOccurenceThreshold=50):
 
-        words = []
+        self.wordToId = {}
+
+        wordToOcc = {}
 
         for pathToFile in paths:
             file = open(pathToFile)
             for tweet in file:
-                for word in tweet.split(' '):
-                    words.append(word)
+                """  TODO : could be considered out set"""
+                for word in set(tweet.strip().split(' ')):
+                    if word not in wordToOcc:
+                        wordToOcc[word] = 1
+                    else:
+                        wordToOcc[word] = wordToOcc[word] + 1
+
             file.close()
 
 
-        words.sort()
-
-        self.wordToId= {}
-        currOcc = -1
-        prevWord = None
-
-        idWord = 0
-
-        for currWord in words:
-
-            if currWord != prevWord:
-
-                if currOcc >= minOccurenceThreshold:
-                    self.wordToId[prevWord] = idWord
-                    idWord = idWord + 1
-
-                currOcc = 1
-                prevWord = currWord
-
-            else:
-                currOcc = currOcc + 1
-
-
-        if currOcc>=minOccurenceThreshold:
-            self.wordToId[prevWord] = idWord
+        freshId = 0
+        for (word, occ) in wordToOcc.items():
+            if occ >= minOccurenceThreshold:
+                self.wordToId[word] = freshId
+                freshId = freshId + 1
 
 
 
