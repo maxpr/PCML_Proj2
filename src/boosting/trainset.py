@@ -223,7 +223,8 @@ class trainset:
 
 
         if len(wLearner.getWordIds()) == 0:
-            return 0
+            print("unexpected arg")
+            return set()
 
         relativeTweetIdSet = [self.wordToTweets[wordId] for wordId in wLearner.getWordIds()]
         relativeTweetIdSet = reduce(lambda x,y: x.union(y), relativeTweetIdSet)
@@ -254,6 +255,7 @@ class trainset:
     def setUpdatetetacache(self, tweetIdLs_weightModif):
 
         if len(tweetIdLs_weightModif) == 0:
+            print("unexpected arg")
             return 0
 
         wordIds_inModif = [self.tweetToWords[tweetId] for tweetId in tweetIdLs_weightModif]

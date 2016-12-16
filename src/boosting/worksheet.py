@@ -70,10 +70,10 @@ if False:
 if True:
 
 
-    boosting = adaboost('../data/pos_train_clean_cutTrain.txt', '../data/neg_train_clean_cutTrain.txt')
+    boosting = adaboost('../data/pos_train.txt', '../data/neg_train.txt')
 
-    negTest = dataCleaning('../data/neg_train_clean_cutTrain.txt').getData()
-    posTest = dataCleaning('../data/pos_train_clean_cutTrain.txt').getData()
+    negTest = dataCleaning('../data/neg_train.txt').getData()
+    posTest = dataCleaning('../data/pos_train.txt').getData()
 
     boosting.learnAndTest(posTest, negTest)
 

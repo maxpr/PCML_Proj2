@@ -16,8 +16,7 @@ class adaboost:
 
 
 
-    def __init__(self, pathToPosTrainFile, pathToNegTrainFile, wordsByWeakLearner=100):
-
+    def __init__(self, pathToPosTrainFile, pathToNegTrainFile, wordsByWeakLearner=1):
 
         self.vocabulary = vocabulary.createVocabulary([pathToPosTrainFile,pathToNegTrainFile])
 
@@ -34,8 +33,8 @@ class adaboost:
 
 
 
-
-    def getNextWeakLearner(self):
+    """ todo : same wL each time ? """
+    def getNextWeakLearner(self, unselected_wordIds):
 
         print("find best word\n")
 
@@ -55,7 +54,7 @@ class adaboost:
 
                 curr_teta = self.trainset.get_teta_err(curr_wordId)
 
-                if curr_teta < best_teta and curr_wordId not in nextWordIds:
+                if curr_teta < best_teta and curr_wordId in unselected_wordIds:
                     best_teta = curr_teta
                     best_wordId = curr_wordId
 
@@ -65,16 +64,6 @@ class adaboost:
                 for tweetIdToRmv in self.trainset.getTweetIdContaining(best_wordId):
                     if tweetIdToRmv in tweetHavingWL:
                         tweetHavingWL.remove(tweetIdToRmv)
-
-
-                label = self.trainset.get_teta_label(best_wordId)
-                rightClass = 0
-                wrongClass = 0
-                for tweetId in self.trainset.getTweetIdContaining(best_wordId):
-                    if self.trainset.getGivenLabel(tweetId) == label:
-                        rightClass = rightClass + 1
-                    else :
-                        wrongClass = wrongClass + 1
 
 
         myWordIds = []
@@ -91,17 +80,55 @@ class adaboost:
 
 
 
+    def getNextWeakLearner2(self, unselected_wordIds):
+
+        print("find best word\n")
+
+        """best $wordByWeakLearner words for the next weaklearner"""
+        nextWordIds = set()
+
+
+        for i in range(self.wordsByWeakLearner):
+
+            best_wordId = None
+            best_teta = 1
+
+            for curr_wordId in unselected_wordIds:
+
+                curr_teta = self.trainset.get_teta_err(curr_wordId)
+
+                if curr_teta < best_teta and curr_wordId not in nextWordIds:
+                    best_teta = curr_teta
+                    best_wordId = curr_wordId
+
+
+            if best_wordId != None:
+                nextWordIds.add(best_wordId)
+
+        myWordIds = []
+        myLabels = []
+
+        for wordId in nextWordIds:
+            myWordIds.append(wordId)
+            res = self.trainset.get_teta_label(wordId)
+            myLabels.append(res)
+
+
+        return weakLearner(myWordIds, myLabels)
+
+
+
 
 
     def learnAndTest(self, posTweetsTest, negTweetsTest):
 
+        unselected_wordIds = set(range(self.vocabulary.size()))
 
-        wLearner = self.getNextWeakLearner()
+        wLearner = self.getNextWeakLearner(unselected_wordIds)
         curr_err = self.trainset.getError(wLearner)
-        local_voc = self.vocabulary
 
 
-
+        i = 0
         while curr_err < 0.5:
 
             minThreshold = 0.05
@@ -119,17 +146,26 @@ class adaboost:
             self.trainset.setUpdatetetacache(modifiedWeight_tweetId)
 
             print("update : done\n")
-            local_voc = local_voc.removeKeys(wLearner.getWordIds())
+            for wordId in wLearner.getWordIds():
+                unselected_wordIds.remove(wordId)
 
-            if(local_voc.size() == 0):
+            if(len(unselected_wordIds) == 0):
                 break
 
-            print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest,negTweetsTest)))
+            if(i%1 == 0):
+                """
+                print( '\n'.join([ str(wL.getWeight()) + " => " + str(wL.getWordIds()) for wL in self.weakLearnerLs]))
+                """
+                print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest,negTweetsTest)))
 
+            wLearner = self.getNextWeakLearner(unselected_wordIds)
+            curr_err = self.trainset.getError(wLearner)
+
+            i = i+1
 
 
         print("========== TEST PREDICTION :: " + str(self.test(posTweetsTest, negTweetsTest)))
-        print([wL.getWeight() for wL in self.weakLearnerLs])
+
 
 
 

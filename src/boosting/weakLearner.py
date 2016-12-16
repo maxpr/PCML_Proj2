@@ -39,8 +39,10 @@ class weakLearner:
         if value<0:
             return -self.weight
         elif value == 0:
+            """
             print("almost total (~only empty tweet/no word in voc)")
             print(givenWordIds)
+            """
             return 0
         else:
             return self.weight
