@@ -22,7 +22,9 @@ class dataCleaning:
             TAGLANG='en',
             TAGPARFILE='/Users/noodle/workspace/python/PCML/project2/lib/english-utf8.par')
 
-        self.puncSet = set("<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
+        self.specCharSet = set("i<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
+        self.trackedWordFunc = set(['NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
+
 
 
         if pathToFile == None:
@@ -87,6 +89,99 @@ class dataCleaning:
 
 
 
+    def avgSmallWords(self):
+
+        w = {}
+        for tweet in self.getData():
+            totalSmall = 0
+            for word in tweet.strip().split(' '):
+                if len(word) < 4:
+                    hasPunc = False
+                    for char in word:
+                        if char in self.specCharSet:
+                            hasPunc = True
+                            break
+                    if not hasPunc:
+                        totalSmall += 1
+
+            if totalSmall in w:
+                w[totalSmall] = w[totalSmall] +1
+            else:
+                w[totalSmall] = 1
+
+        return w
+
+
+
+
+    def setWordFunc(self, tweet):
+
+        wordFuncToOcc = {}
+
+        for res in self.treeTagger.tag_text(tweet):
+            res = res.split('\t')
+            """classic result length : word - word_function - stem"""
+            if len(res) == 3:
+                if res[1] in wordFuncToOcc:
+                    wordFuncToOcc[res[1]] = wordFuncToOcc[res[1]] + 1
+                else:
+                    wordFuncToOcc[res[1]] = 1
+
+
+        for (wF, occ) in wordFuncToOcc.items():
+
+            if wF in self.trackedWordFunc:
+                tweet =  tweet + " " + " WF_" + wF + str(occ)
+
+        return tweet
+
+
+
+
+
+    def wordFuncTest(self):
+
+
+        strToWordFunc = {}
+
+
+        for tweet in self.getData():
+
+            strToWordFunc1 = {}
+
+            for res in self.treeTagger.tag_text(tweet):
+                res = res.split('\t')
+                """classic result length : word - word_function - stem"""
+                if len(res) == 3:
+                    if res[1] in strToWordFunc1:
+                        strToWordFunc1[res[1]] = strToWordFunc1[res[1]] + 1
+                    else:
+                        strToWordFunc1[res[1]] = 1
+
+            for (wFunc, occ) in strToWordFunc1.items():
+                if wFunc in strToWordFunc:
+                    strToWordFunc[wFunc].append(occ)
+                else:
+                    strToWordFunc[wFunc] = [occ]
+
+
+        for (wFunc, occLs) in strToWordFunc.items():
+
+            wordFuncOccToTotal = {}
+
+            for occ in occLs:
+                if occ in wordFuncOccToTotal:
+                    wordFuncOccToTotal[occ] = wordFuncOccToTotal[occ] + 1
+                else:
+                    wordFuncOccToTotal[occ] = 1
+
+            strToWordFunc[wFunc] = wordFuncOccToTotal
+
+
+        return strToWordFunc
+
+
+
 
     """
     mutable modifications of the dataset into the class
@@ -126,6 +221,22 @@ class dataCleaning:
 
 
 
+    @staticmethod
+    def saveTestData(pathToFile, predictions):
+
+        file = open(pathToFile, 'w+')
+
+        file.write("Id, Prediction\n")
+
+        i = 1
+        for pred in predictions:
+            file.write(str(i)+","+str(pred)+"\n")
+            i += 1
+
+        file.close()
+
+
+
 
     """
     mutable modifications of the dataset into the class
@@ -149,12 +260,58 @@ class dataCleaning:
     """
     def tweetTransform(self, tweet):
 
-        tmp = self.__tweetStemming(tweet)
-        tmp = self.__consecutiveLetterRemoval(tmp)
-        tmp = self.__hashTagRenaming(tmp)
-        tmp = self.__punctuationRecover(tmp)
+        """tmp = self.__tweetStemming(tweet)"""
+        tmp = tweet
+        tmp = self.setTweetSize(tmp)
+        tmp = self.setWordFunc(tmp)
+        tmp = self.setSpecCharTransform(tmp)
 
         return tmp
+
+
+
+
+    def setSpecCharTransform(self,tweet):
+
+        puncCounter = {}
+
+        for l in self.specCharSet:
+            puncCounter[l] = 0
+
+
+        for l in tweet.split(' '):
+            if l in self.specCharSet:
+                puncCounter[l] = puncCounter[l] + 1
+
+
+        for l in self.specCharSet:
+            puncCounter[l] = min([puncCounter[l],4])
+
+
+        newTweet = ""
+        for w in set(tweet.strip().split()):
+            if w not in self.specCharSet:
+                newTweet = newTweet + " " + w
+
+
+        for (specChar, occ) in puncCounter.items():
+            if occ > 0:
+                newTweet = newTweet + " " + specChar + "_" + str(occ)
+
+
+        return newTweet.strip()
+
+
+
+    def setTweetSize(self, tweet):
+
+        totalWords = 0
+        for w in tweet.strip().split(' '):
+            if len(w) > 3:
+                totalWords = totalWords + 1
+
+
+        return tweet + " twtSiz_%" +str(totalWords)
 
 
 

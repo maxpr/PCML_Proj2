@@ -22,26 +22,64 @@ if False:
 
 if False:
 
-    dataC = dataCleaning('../data/pos_train.txt')
+    dataC = dataCleaning('../data/train_pos_full.txt')
 
     print('remove duplicate...')
     dataC.setDuplicateLinesRemoved()
     print('set tweet transformation, can take some times...')
     dataC.setTweetTransform()
     print('save the data')
-    dataC.save('../data/pos_train_clean.txt')
+    dataC.cutAndSave(0.9,'../data/pos_train_full.txt','../data/pos_test_full.txt',)
     print('done')
 
 
-    dataC = dataCleaning('../data/neg_train.txt')
+    dataC = dataCleaning('../data/train_neg_full.txt')
 
     print('remove duplicate...')
     dataC.setDuplicateLinesRemoved()
     print('set tweet transformation, can take some times...')
     dataC.setTweetTransform()
     print('save the data')
-    dataC.save('../data/neg_train_clean.txt')
+    dataC.cutAndSave(0.9,'../data/neg_train_full.txt','../data/neg_test_full.txt',)
     print('done')
+
+
+
+if False:
+
+    dataC = dataCleaning('../data/test_data.txt')
+    print('remove duplicate...')
+    dataC.setRemoveTestTweetId()
+    print('set tweet transformation, can take some times...')
+    dataC.setTweetTransform()
+    print('save the data')
+    dataC.save('../data/test_data_clean.txt')
+    print('done')
+
+
+if False:
+    dataC = dataCleaning('../data/pos_train_full.txt')
+    dataC.cutAndSave(0.5, '../data/pos_train_full1.txt','../data/pos_train_full2.txt')
+
+    dataC = dataCleaning('../data/neg_train_full.txt')
+    dataC.cutAndSave(0.5, '../data/neg_train_full1.txt','../data/neg_train_full2.txt')
+
+    print('done')
+
+
+if True:
+
+    boosting = adaboost('../data/pos_train_full1.txt','../data/neg_train_full1.txt')
+
+    posTest = dataCleaning('../data/pos_test_full.txt').getData()
+    negTest = dataCleaning('../data/neg_test_full.txt').getData()
+    tweetsToPred = dataCleaning('../data/test_data_clean.txt').getData()
+
+    boosting.learnAndTest('../data/pred_output_index.txt',posTest, negTest, tweetsToPred)
+
+
+
+
 
 if False:
 
@@ -66,16 +104,50 @@ if False:
     print(four)
 
 
+if False:
 
-if True:
+    negTest = dataCleaning('../data/neg_train.txt')
+    posTest = dataCleaning('../data/pos_train.txt')
+
+    wordFuncTestPos = posTest.wordFuncTest()
+    wordFuncTestNeg = negTest.wordFuncTest()
+
+    for wF in wordFuncTestPos.keys():
+
+        print("CURRENTLY ON : " + wF)
+
+        occToTotalPos = wordFuncTestPos[wF]
+        occToTotalNeg = {}
+        if wF in wordFuncTestNeg:
+            occToTotalNeg = wordFuncTestNeg[wF]
 
 
-    boosting = adaboost('../data/pos_train.txt', '../data/neg_train.txt')
+        for (occ, totalPos) in occToTotalPos.items():
 
-    negTest = dataCleaning('../data/neg_train.txt').getData()
-    posTest = dataCleaning('../data/pos_train.txt').getData()
+            totalNeg = 0
+            if occ in occToTotalNeg:
+                totalNeg = occToTotalNeg[occ]
 
-    boosting.learnAndTest(posTest, negTest)
+            print("\t occ = " + str(occ) + " posTotal = " + str(totalPos) + "\t\t negTotal = " + str(totalNeg))
+
+
+
+if False:
+
+    negTest = dataCleaning('../data/neg_train.txt')
+    posTest = dataCleaning('../data/pos_train.txt')
+
+
+    negSmallW = negTest.avgSmallWords()
+    posSmallW = posTest.avgSmallWords()
+
+    for (totalSmallWords, occNeg) in negSmallW.items():
+
+        occPos = 0
+        if totalSmallWords in posSmallW:
+            occPos = posSmallW[totalSmallWords]
+
+        print(str(totalSmallWords)+" negOcc : " + str(occNeg)+" posOcc : " + str(occPos) )
 
 
 
