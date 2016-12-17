@@ -11,8 +11,49 @@ import pickle
 import random
 import re
 import string
+from nltk.stem import PorterStemmer
+from gensim.models import word2vec
 
-def preprocess_tweets():
+global_stemmer = PorterStemmer() 
+class StemmingHelper(object):
+    """
+    Class to aid the stemming process - from word to stemmed form,
+    and vice versa.
+    The 'original' form of a stemmed word will be returned as the
+    form in which its been used the most number of times in the text.
+    """ 
+    #This reverse lookup will remember the original forms of the stemmed
+    #words
+    word_lookup = {}
+    @classmethod
+    def stem(cls, word):
+        """
+        Stems a word and updates the reverse lookup.
+        """
+        #Stem the word
+        stemmed = global_stemmer.stem(word)
+ 
+        #Update the word lookup
+        if stemmed not in cls.word_lookup:
+            cls.word_lookup[stemmed] = {}
+        cls.word_lookup[stemmed][word] = (
+            cls.word_lookup[stemmed].get(word, 0) + 1)
+ 
+        return stemmed
+ 
+    @classmethod
+    def original_form(cls, word):
+        """
+        Returns original form of a word given the stemmed version,
+        as stored in the word lookup.
+        """
+ 
+        if word in cls.word_lookup:
+            return max(cls.word_lookup[word].keys(),
+                       key=lambda x: cls.word_lookup[word][x])
+        else:
+            return word
+def process_tweet():            
     input_file_location = 'data/full10_tweets.txt'
     output_file_location = 'data/full10_tweets_stemmed.txt'
 
@@ -68,17 +109,13 @@ def preprocess_tweets():
                 fout.write('\n')
     print("finish preprocessing")
 			
-			
-def construct_model(size,window):
+def construct_features():			
     size = 200
     window = 8
-    sentences = word2vec.LineSentence('data/out.txt')
+    sentences = word2vec.LineSentence('data/full10_tweets_stemmed.txt')
     model = word2vec.Word2Vec(sentences, size=size,window =window)
     print("finish construct model")
 	
-	
-	
-def construct_vectors_features():
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
     counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
@@ -158,6 +195,7 @@ def construct_vectors_features():
         training_set_neg[j,lengt+6] = num3point #number of ...
     np.save('data/trainingsetword2vec_pos', training_set_pos)
     np.save('data/trainingsetword2vec_neg', training_set_neg)
+    return model
 	
 def create_csv_submission(ids, y_pred, name):
     """
@@ -175,7 +213,7 @@ def create_csv_submission(ids, y_pred, name):
 
 			
 			
-def predict_labels(flag=".npy"):
+def predict_labels(model,flag=".npy"):
     #Load the training set
     path_neg = str("data/trainingsetword2vec_neg"+flag)
     path_pos = str("data/trainingsetword2vec_pos"+flag)
@@ -222,18 +260,20 @@ def predict_labels(flag=".npy"):
     LR.fit(X,y)
     
     #And now, predict the results
-    topredict = construct_features_for_test_set(tweets)
+    topredict = construct_features_for_test_set(model,tweets)
+    print("test set constructed")
     predictions = LR.predict(topredict)
     #Construct the submission
     predictions = predictions*2-1
     create_csv_submission(idx,predictions,"submission.csv")
     
-def construct_features_for_test_set(test_set_tweet):
+def construct_features_for_test_set(model,test_set_tweet):
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
     counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
     
     additional_features = 6
+    lengt = 200
     test_set = np.zeros((np.shape(test_set_tweet)[0],lengt+additional_features))
     for j in range(0,np.shape(test_set)[0]):
         num_punctu = counter(test_set_tweet[j],string.punctuation)
@@ -266,8 +306,6 @@ def construct_features_for_test_set(test_set_tweet):
         test_set[j,lengt+4] = num_aux_neg #word in a list of negative aux
         test_set[j,lengt+5] = num3point #number of ...
     return test_set
-
-preprocess_tweets()
-construct_model(200,8)
-construct_vectors_features()
-predict_labels()
+process_tweet()
+model = construct_features()
+predict_labels(model)
