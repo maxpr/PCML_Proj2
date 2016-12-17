@@ -23,7 +23,7 @@ class dataCleaning:
             TAGPARFILE='/Users/noodle/workspace/python/PCML/project2/lib/english-utf8.par')
 
         self.specCharSet = set("i<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
-        self.trackedWordFunc = set(['NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
+        self.trackedWordFunc = set(['POS','MD','NP','IN','VVD','VHZ',',','VV','NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
 
 
 

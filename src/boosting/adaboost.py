@@ -25,48 +25,51 @@ class adaboost:
         self.wordsByWeakLearner = wordsByWeakLearner
 
 
-
+    """
+    return the next weaklearner with the less error on the trainset
+    """
     def getNextWeakLearner(self, unselected_wordIds):
-
-        print("next WL")
 
         """best $wordByWeakLearner words for the next weaklearner"""
         best_wordId = None
-        best_teta = 1
+        best_err = 1
 
         for curr_wordId in unselected_wordIds:
 
-            curr_teta = self.trainset.get_teta_err(curr_wordId)
+            curr_err = self.trainset.get_pred_err(curr_wordId)
 
-            if curr_teta < best_teta:
-                best_teta = curr_teta
+            if curr_err < best_err:
+                best_err = curr_err
                 best_wordId = curr_wordId
 
 
-        return weakLearner(best_wordId, self.trainset.get_teta_label(best_wordId))
+        return weakLearner(best_wordId, self.trainset.get_pred_label(best_wordId))
 
 
 
 
 
-
+    """
+    learn from the train set and keep a log with the accuracy
+    """
     def learnAndTest(self, pathToOuputRes, posTweetsTest, negTweetsTest, tweetsToPred):
 
 
-        unselected_wordIds = set(range(self.vocabulary.size()))
+        unselected_wordIds = [i for i in range(self.vocabulary.size())]
 
-        print("one")
         wLearner = self.getNextWeakLearner(unselected_wordIds)
-        curr_err = self.trainset.getError(wLearner)
+        curr_err = self.trainset.get_pred_err(wLearner.getWordId())
+        minThreshold = 0.000000001
 
 
-        i = 0
+        i = 1
+
         while curr_err < 0.5:
-            print(i)
-            minThreshold = 0.0000001
+
+            print(str(i)+"/"+str(self.vocabulary.size()) + "  ==> err = " +str(curr_err))
+
             if curr_err < minThreshold:
                 curr_err = minThreshold
-
 
             wLearner.setWeight(0.5 * math.log((1-curr_err)/curr_err))
 
@@ -75,14 +78,15 @@ class adaboost:
             modifiedWeight_tweetId = self.trainset.setUpdateWeight(wLearner,curr_err)
 
 
-            self.trainset.setUpdatetetacache(modifiedWeight_tweetId)
+            self.trainset.setUpdateErrcache(modifiedWeight_tweetId)
 
             unselected_wordIds.remove(wLearner.getWordId())
+
 
             if(len(unselected_wordIds) == 0):
                 break
 
-            if(i%500 == 0):
+            if(i%100 == 0):
 
                 rsltTest = self.test(posTweetsTest,negTweetsTest)
                 fileOut = open(pathToOuputRes,'a')
@@ -122,9 +126,8 @@ class adaboost:
 
 
 
-
             wLearner = self.getNextWeakLearner(unselected_wordIds)
-            curr_err = self.trainset.getError(wLearner)
+            curr_err = self.trainset.get_pred_err(wLearner.getWordId())
 
             i = i+1
 

@@ -19,7 +19,7 @@ class vocabulary:
 
 
     @staticmethod
-    def createVocabulary(pathToFiles, minOccThreshold = 30):
+    def createVocabulary(pathToFiles, minOccThreshold = 20):
 
         wordToOcc = {}
 

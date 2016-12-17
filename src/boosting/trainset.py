@@ -61,15 +61,17 @@ class trainset:
 
         self.tweetWeight = [1/self.size for i in range(self.size)]
 
-        self.teta_cache = []
+        self.err_cache = []
         for i in range(self.vocabulary.size()):
-            self.teta_cache.append(self.compute_teta_err(i))
+            self.err_cache.append(self.compute_pred_err(i))
 
 
 
 
 
-
+    """
+    return all tweets containing the given word id
+    """
     def getTweetIdContaining(self,wordId):
 
         return self.wordToTweets[wordId]
@@ -77,9 +79,9 @@ class trainset:
 
     """
     param1: tweetId
-    return the output label of the corresponding training exemple
+    return the output label of the corresponding tweet id
     """
-    def getGivenLabel(self, tweetId):
+    def getExempleLabel(self, tweetId):
 
         if tweetId < self.firstNegId:
             return 1
@@ -88,14 +90,16 @@ class trainset:
 
 
 
+    """
+    return the word id in the given tweet id
+    """
     def getWordIds(self, tweetId):
         return self.tweetToWords[tweetId]
 
+    """
+    return the size of the training set
+    """
     def getSize(self):
-        return self.size
-
-
-    def getTrainingSize(self):
         return self.size
 
 
@@ -105,12 +109,6 @@ class trainset:
     return the adaboost weight of corresponding training exemple
     """
     def getWeight(self, tweetId):
-
-        """
-        print("tweet id : "+ str(tweetId)+"\n")
-        print("size : " + str(len(self.tweetWeight))+"\n")
-        """
-
         return self.tweetWeight[tweetId]
 
 
@@ -118,32 +116,23 @@ class trainset:
     """
     If we try to use a word as a partial indicator to classification,
     we have to get the information, how the word will help in the process.
-    the teta value returned is an error value over the subset of tweets concerned
-    by the indicator. Then it computes the sum of the weights over the positive/negative
-    tweets, it considers that word is an indicator for the most weighted class and returns
-    the lower weight as teta. This weight is divided by the subset size of the
-    concerned tweets in order to be comparable.
+    the value returned is an error over the subset of tweets concerned
+    by the indicator.
     """
-    def compute_teta_err(self, wordId):
+    def compute_pred_err(self, wordId):
 
         posW = 0
         negW = 0
         for tweetId in self.wordToTweets[wordId]:
-            if self.getGivenLabel(tweetId) == 1:
+            if self.getExempleLabel(tweetId) == 1:
                 posW += self.getWeight(tweetId)
             else:
                 negW += self.getWeight(tweetId)
 
-
-        """ TODO : also try to divide by the additional sum"""
-        return min([posW, negW])/len(self.wordToTweets[wordId])*self.size
+        return min([posW, negW])*self.size/len(self.wordToTweets[wordId])
 
 
 
-    def compute_teta_heuristic(self, wordId):
-
-        """ TODO : also try to divide by the additional sum"""
-        return self.compute_teta_err(wordId)/math.sqrt(len(self.wordToTweets[wordId]))
 
 
     """
@@ -151,22 +140,21 @@ class trainset:
     return the classification error (sum of exemple's weight on classification error)
     and the label for the word (ie: word can classify 1 or -1 a tweet)
     """
-    def get_teta_err(self, wordId):
+    def get_pred_err(self, wordId):
 
-        return self.teta_cache[wordId]
-
-
+        return self.err_cache[wordId]
 
 
-
-
-    def get_teta_label(self, wordId):
+    """
+    return the prediction made by a wordId (partial weak classifier)
+    """
+    def get_pred_label(self, wordId):
 
 
         tweetIds = self.wordToTweets[wordId]
 
-        posWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getGivenLabel(tweetId) == 1]
-        negWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getGivenLabel(tweetId) == -1]
+        posWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getExempleLabel(tweetId) == 1]
+        negWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getExempleLabel(tweetId) == -1]
 
         posW = sum(posWeights)
         negW = sum(negWeights)
@@ -176,27 +164,6 @@ class trainset:
             return 1
         else:
             return -1
-
-
-
-    """
-    param1: a word identifier in the vocabulary used to build the class
-    return the classification error (sum of exemple's weight on classification error)
-    and the label for the word (ie: word can classify 1 or -1 a tweet)
-    """
-    def getError(self, wLearner):
-
-        relativeTweetIdSet = self.wordToTweets[wLearner.getWordId()]
-        pred = wLearner.getLabel()
-
-        err = 0
-
-        for tweetId in relativeTweetIdSet:
-            if (pred > 0 and self.getGivenLabel(tweetId)<0)  or (pred < 0 and self.getGivenLabel(tweetId)>0):
-                err = err + self.getWeight(tweetId)
-
-
-        return err/len(relativeTweetIdSet)*self.size
 
 
 
@@ -213,7 +180,7 @@ class trainset:
 
         for tweetId in relativeTweetIdSet:
 
-            expValue = -wLearner.weight*self.getGivenLabel(tweetId)*wLearner.getLabel()
+            expValue = -wLearner.weight*self.getExempleLabel(tweetId)*wLearner.getLabel()
 
             value = math.exp(expValue)/Z
 
@@ -223,8 +190,10 @@ class trainset:
 
 
 
-
-    def setUpdatetetacache(self, tweetIdLs_weightModif):
+    """
+    update the err cache for the word included in the tweetId list given as parameter
+    """
+    def setUpdateErrcache(self, tweetIdLs_weightModif):
 
         if len(tweetIdLs_weightModif) == 0:
             print("unexpected arg")
@@ -234,7 +203,7 @@ class trainset:
         wordIds_inModif = reduce( ( lambda x,y: x.union(y) ),wordIds_inModif)
 
         for wordId in wordIds_inModif:
-                self.teta_cache[wordId] = self.compute_teta_err(wordId)
+                self.err_cache[wordId] = self.compute_pred_err(wordId)
 
 
 
