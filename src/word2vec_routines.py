@@ -129,7 +129,7 @@ def construct_features():
     list_auxiliarry_pos = ["must","need","should","may","might","can","could","shall","would","will"]
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
     counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
-    additional_features = 6
+    additional_features = 8
     
     pos_train = open('data/pos_clean_v1.txt').readlines()
     lengt = size
@@ -144,11 +144,17 @@ def construct_features():
         num_punctu = counter(pos_train[j],string.punctuation)
         divider = 0
         average = 0
+        num_user =0
+        num_url= 0
         num3point = 0
         num_aux_pos =0
         num_aux_neg =0
         for i in list_word:
             average+=len(i)
+            if(i=="<user>"):
+                num_user+=1
+            if(i=="<url>"):
+                num_url+=1
             if(i=="..."): 
                 num3point+=1
             if(i in list_auxiliarry_pos):
@@ -169,7 +175,8 @@ def construct_features():
         training_set_pos[j,lengt+4] = num_aux_pos #word in a list of auxilarry
         training_set_pos[j,lengt+5] = num_aux_neg #word in a list of negative aux
         training_set_pos[j,lengt+6] = num3point #number of ...
-    
+        training_set_pos[j,lengt+7] = num_user #number of <user>
+        training_set_pos[j,lengt+8] = num_url #number of <url>
     neg_train = open('data/neg_clean_v1.txt',encoding='utf-8').readlines()
     training_set_neg = np.zeros(((np.shape(neg_train)[0],lengt+1+additional_features)))
     #for each word, search if it is in pos_train or neg_train
@@ -179,10 +186,16 @@ def construct_features():
         divider = 0
         average = 0
         num3point = 0
+        num_user= 0
+        num_url = 0
         num_aux_pos =0
         num_aux_neg =0
         for i in list_word:
             average+=len(i)
+            if(i=="<user>"):
+                num_user+=1
+            if(i=="<url>"):
+                num_url+=1
             if(i=="..."): 
                 num3point+=1
             if(i in list_auxiliarry_pos):
@@ -203,6 +216,8 @@ def construct_features():
         training_set_neg[j,lengt+4] = num_aux_pos #word in a list of auxilarry
         training_set_neg[j,lengt+5] = num_aux_neg #word in a list of negative aux
         training_set_neg[j,lengt+6] = num3point #number of ...
+        training_set_neg[j,lengt+7] = num_user #number of <user>
+        training_set_neg[j,lengt+8] = num_url #number of <url
     np.save('data/trainingsetword2vec_pos', training_set_pos)
     np.save('data/trainingsetword2vec_neg', training_set_neg)
     return model
@@ -269,7 +284,7 @@ def construct_features_for_test_set(model,test_set_tweet):
     list_auxiliarry_neg = ["won't","shouldn't","not","can't","couldn't","wouldn't"]
     counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
     
-    additional_features = 6
+    additional_features = 8
     lengt = 200
     test_set = np.zeros((np.shape(test_set_tweet)[0],lengt+additional_features))
     for j in range(0,np.shape(test_set)[0]):
@@ -280,8 +295,14 @@ def construct_features_for_test_set(model,test_set_tweet):
         num3point = 0
         num_aux_pos =0
         num_aux_neg =0
+        num_user = 0
+        num_url= 0
         for i in list_word:
             average+=len(i)
+            if(i=="<user>"):
+                num_user+=1
+            if(i=="<url>"):
+                num_url+=1
             if(i=="..."): 
                 num3point+=1
             if(i in list_auxiliarry_pos):
@@ -302,6 +323,8 @@ def construct_features_for_test_set(model,test_set_tweet):
         test_set[j,lengt+3] = num_aux_pos #word in a list of auxilarry
         test_set[j,lengt+4] = num_aux_neg #word in a list of negative aux
         test_set[j,lengt+5] = num3point #number of ...
+        test_set[j,lengt+6] = num_user #number of <user>
+        test_set[j,lengt+7] = num_url #number of <url>
     return test_set
 
 model = construct_features()
