@@ -96,7 +96,6 @@ def predict_labels(flag=".npy"):
     training_set = np.concatenate((ts_neg,ts_pos))
     y = training_set[:,0]
     X = training_set[:,1:np.shape(training_set)[1]]
-    X = build_poly(X,2)
     #Now we load and predict the data
     data = np.genfromtxt('data/test_data.txt', delimiter="\n",dtype=str)    
     idx = np.zeros(np.shape(data)[0])
@@ -132,7 +131,6 @@ def predict_labels(flag=".npy"):
     
     #And now, predict the results
     topredict = construct_features_for_test_set(tweets)
-    topredict = build_poly(topredict,2)
     predictions = LR.predict(topredict)
     #Construct the submission
     predictions = predictions*2-1
@@ -181,5 +179,3 @@ def construct_features_for_test_set(test_set_tweet):
         test_set[j,np.shape(embeddings)[1]+5] = num3point
     #then divide by number of words (averaging word vector over all words of the tweet)
     return test_set
-construct_features()
-predict_labels()
