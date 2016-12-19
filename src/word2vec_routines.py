@@ -5,6 +5,7 @@ import csv
 import numpy as np
 import pandas as pd
 import sklearn.linear_model as sk
+from sklearn import svm
 import sklearn.model_selection as ms
 from sklearn import svm
 import pickle
@@ -13,7 +14,16 @@ import re
 import string
 from nltk.stem import PorterStemmer
 from gensim.models import word2vec
+import numpy as np
 
+
+def build_poly(x, degree):
+    """polynomial basis functions for input data x, for j=0 up to j=degree."""
+    poly = np.ones((len(x), 1))
+    for deg in range(1, degree+1):
+        poly = np.c_[poly, np.power(x, deg)]
+    return poly
+    
 global_stemmer = PorterStemmer() 
 class StemmingHelper(object):
     """
@@ -112,7 +122,7 @@ def process_tweet():
 def construct_features():			
     size = 200
     window = 8
-    sentences = word2vec.LineSentence('data/full10_tweets_stemmed.txt')
+    sentences = word2vec.LineSentence('data/train_clean_v1.txt')
     model = word2vec.Word2Vec(sentences, size=size,window =window)
     print("finish construct model")
 	
@@ -121,7 +131,7 @@ def construct_features():
     counter = lambda l1, l2: len(list(filter(lambda c: c in l2, l1))) #Used later to count number fo punctuation
     additional_features = 6
     
-    pos_train = open('data/pos_train_stemmed.txt').readlines()
+    pos_train = open('data/pos_clean_v1.txt').readlines()
     lengt = size
     pos_mask = np.zeros(lengt+1+additional_features)
     pos_mask[0] +=1
@@ -160,7 +170,7 @@ def construct_features():
         training_set_pos[j,lengt+5] = num_aux_neg #word in a list of negative aux
         training_set_pos[j,lengt+6] = num3point #number of ...
     
-    neg_train = open('data/neg_train_stemmed.txt',encoding='utf-8').readlines()
+    neg_train = open('data/neg_clean_v1.txt',encoding='utf-8').readlines()
     training_set_neg = np.zeros(((np.shape(neg_train)[0],lengt+1+additional_features)))
     #for each word, search if it is in pos_train or neg_train
     for j in range(0,np.shape(neg_train)[0]):
@@ -226,43 +236,30 @@ def predict_labels(model,flag=".npy"):
     y = training_set[:,0]
     X = training_set[:,1:np.shape(training_set)[1]]
     #Now we load and predict the data
-    data = np.genfromtxt('data/test_data_stemmed.txt', delimiter="\n",dtype=str)    
+    data = open('data/test_clean_v1.txt',encoding='utf-8').readlines()
     idx = np.zeros(np.shape(data)[0])
     tweets = ["" for a in range(0,np.shape(data)[0])]
     for i in range(0,np.shape(data)[0]):
-        spliter = data[i].split(",")
-        idx[i] = spliter[0]
-        tweet = spliter[1]
-        for j in range(2,np.shape(spliter)[0]):
-            tweet = tweet+","+spliter[j]
-        tweets[i] = tweet
+        idx[i] =(i+1)
+        tweets[i] = data[i]
     
     #Construct the logistic regressor
     LR = sk.LogisticRegressionCV()
+    #clf = svm.SVC()
     #LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, 
     #class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, 
     #warm_start=False, n_jobs=1)[source]¶
     #http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     #train the logistic regressor
-    kf = ms.KFold(n_splits=3,shuffle=True)
     X_poly = X
-    for train_idx, test_idx in kf.split(X_poly):
-        train_set = X_poly[train_idx]
-        test_set = X_poly[test_idx]
-        train_target = y[train_idx]
-        test_target = y[test_idx]    
-        LR.fit(train_set,train_target)
-        predictions_temp = LR.predict(test_set)
-        print(predictions_temp.shape)
-        print(test_target.shape)        
-        error = np.sum(np.power(predictions_temp-test_target,2))/np.shape(predictions_temp)[0]
-        print("Yet, error is",error)
-    LR.fit(X,y)
-    
+    LR.fit(X_poly,y)
+    print("fitting done")
+    #clf.fit(X_poly, y)
     #And now, predict the results
     topredict = construct_features_for_test_set(model,tweets)
+    topredict_poly = topredict
     print("test set constructed")
-    predictions = LR.predict(topredict)
+    predictions = LR.predict(topredict_poly)
     #Construct the submission
     predictions = predictions*2-1
     create_csv_submission(idx,predictions,"submission.csv")
@@ -306,6 +303,6 @@ def construct_features_for_test_set(model,test_set_tweet):
         test_set[j,lengt+4] = num_aux_neg #word in a list of negative aux
         test_set[j,lengt+5] = num3point #number of ...
     return test_set
-process_tweet()
+
 model = construct_features()
 predict_labels(model)
