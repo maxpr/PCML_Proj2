@@ -24,8 +24,8 @@ class dataCleaning:
 
         self.treeTagger = treetaggerwrapper.TreeTagger(
             TAGLANG='en',
-            TAGPARFILE='/Users/noodle/workspace/python/PCML/project2/lib/english-utf8.par',
-            TAGDIR='../../tree-tagger')
+            TAGPARFILE='../lib/english-utf8.par',
+            TAGDIR='../tree-tagger')
 
         self.specCharSet = set("i<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
         self.trackedWordFunc = set(['POS','MD','NP','IN','VVD','VHZ',',','VV','NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
