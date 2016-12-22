@@ -1,12 +1,12 @@
 import random
 import string
 
-from src.boosting.trainset import trainset
-from src.boosting.vocabulary import vocabulary
+from boosting.trainset import trainset
+from boosting.vocabulary import vocabulary
 import math
 
-from src.boosting.weakLearner import weakLearner
-from src.dataCleaning import dataCleaning
+from boosting.weakLearner import weakLearner
+from dataCleaning import dataCleaning
 
 
 class adaboost:

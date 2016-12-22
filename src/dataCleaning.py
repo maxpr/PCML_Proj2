@@ -39,7 +39,7 @@ class dataCleaning:
 
         else:
 
-            file = open(pathToFile)
+            file = open(pathToFile,encoding="utf-8")
             self.data = file.read().strip().split('\n')
             file.close()
 
@@ -59,7 +59,7 @@ class dataCleaning:
     """
     def save(self, pathToFile):
 
-        file = open(pathToFile, 'w+')
+        file = open(pathToFile, 'w+',encoding="utf-8")
         file.write('\n'.join(self.data))
         file.close()
 
@@ -74,8 +74,8 @@ class dataCleaning:
 
         file1Threshold = len(self.data)*percent
 
-        file1 = open(pathToFile1, 'w+')
-        file2 = open(pathToFile2, 'w+')
+        file1 = open(pathToFile1, 'w+',encoding="utf-8")
+        file2 = open(pathToFile2, 'w+',encoding="utf-8")
 
 
         for i in range(len(self.data)):
@@ -198,7 +198,7 @@ class dataCleaning:
     @staticmethod
     def saveTestData(pathToFile, predictions):
 
-        file = open(pathToFile, 'w+')
+        file = open(pathToFile, 'w+',encoding="utf-8")
 
         file.write("Id,Prediction\n")
 

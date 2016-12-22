@@ -1,6 +1,6 @@
 import math
 from functools import reduce
-from src.dataCleaning import dataCleaning
+from dataCleaning import dataCleaning
 
 """
 The training set class helps adaboost to manage the weights example
