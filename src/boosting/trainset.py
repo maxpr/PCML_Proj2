@@ -3,36 +3,25 @@ from functools import reduce
 from src.dataCleaning import dataCleaning
 
 """
-The training set of tweets with their relative labels and usefull functions
-used in order to aid adaboost to parametrize their weak learners.
+The training set class helps adaboost to manage the weights example
+in order to easily compute the error rate of any of the remaining
+weak learner.
 """
 class trainset:
 
 
-    """
-    Create the two directories :
 
-    self.wordToTweets -> for a word identified in the vocabulary it maps all related tweet's id
-    self.tweetToWords -> for a tweet identifier it maps all the related word's id that can be
-                         identified in the vocabulary
-
-    It also define the weight of all tweets exemple as 1/total_number_of_tweet_exemple.
-    These weights will be modified by adaboost.
-    """
-    def __init__(self, vocabulary, pathToPosTrainFile, pathToNegTrainFile):
+    def __init__(self, vocabulary, posTweets, negTweets):
 
 
         self.vocabulary = vocabulary
 
+        # 1. create 2 map : wordId => set{tweet} and tweetId => set{word}
         self.wordToTweets = []
         self.tweetToWords = []
 
         for wordId in range(vocabulary.size()):
             self.wordToTweets.append(set())
-
-
-        posTweets = dataCleaning(pathToPosTrainFile).getData()
-        negTweets = dataCleaning(pathToNegTrainFile).getData()
 
         currentTweetId = 0
 
@@ -59,12 +48,29 @@ class trainset:
         self.size = currentTweetId
 
 
+
+        # 2. set all weights to 1/N
+
         self.tweetWeight = [1/self.size for i in range(self.size)]
 
-        self.err_cache = []
-        for i in range(self.vocabulary.size()):
-            self.err_cache.append(self.compute_pred_err(i))
 
+        # 3. each word can be choosen as a weak learner,
+        # compute pos weight and neg weight for each of them
+
+        self.wordToPosW = []
+        self.wordToNegW = []
+
+        for i in range(self.vocabulary.size()):
+                self.wordToPosW.append(0)
+                self.wordToNegW.append(0)
+
+        for i in range(self.size):
+            if self.getExempleLabel(i) == 1:
+                for wordId in self.tweetToWords[i]:
+                    self.wordToPosW[wordId] += 1/self.size
+            else:
+                for wordId in self.tweetToWords[i]:
+                    self.wordToNegW[wordId] += 1/self.size
 
 
 
@@ -96,6 +102,7 @@ class trainset:
     def getWordIds(self, tweetId):
         return self.tweetToWords[tweetId]
 
+
     """
     return the size of the training set
     """
@@ -106,7 +113,7 @@ class trainset:
 
     """
     param1: tweetId
-    return the adaboost weight of corresponding training exemple
+    return the weight of the requested training example
     """
     def getWeight(self, tweetId):
         return self.tweetWeight[tweetId]
@@ -114,52 +121,37 @@ class trainset:
 
 
     """
-    If we try to use a word as a partial indicator to classification,
-    we have to get the information, how the word will help in the process.
-    the value returned is an error over the subset of tweets concerned
-    by the indicator.
-    """
-    def compute_pred_err(self, wordId):
-
-        posW = 0
-        negW = 0
-        for tweetId in self.wordToTweets[wordId]:
-            if self.getExempleLabel(tweetId) == 1:
-                posW += self.getWeight(tweetId)
-            else:
-                negW += self.getWeight(tweetId)
-
-        return min([posW, negW])*self.size/len(self.wordToTweets[wordId])
-
-
-
-
-
-    """
-    param1: a word identifier in the vocabulary used to build the class
-    return the classification error (sum of exemple's weight on classification error)
-    and the label for the word (ie: word can classify 1 or -1 a tweet)
+    Return a weak classifier error on the state of the current
+    training set.
     """
     def get_pred_err(self, wordId):
 
-        return self.err_cache[wordId]
+        posW = self.wordToPosW[wordId]
+        negW = self.wordToNegW[wordId]
+
+        totalTweets = len(self.wordToTweets[wordId])
+
+        err = min([posW, negW])*self.size/totalTweets
+
+        if totalTweets < 15 and err > 0.2:
+            err += 0.50
+        elif totalTweets < 20 and err > 0.2:
+            err += 0.10
+        elif totalTweets < 40 and err > 0.3:
+            err += 0.05
+
+        return err
+
 
 
     """
-    return the prediction made by a wordId (partial weak classifier)
+    return the prediction made by a wordId
     """
     def get_pred_label(self, wordId):
 
+        posW = self.wordToPosW[wordId]
+        negW = self.wordToNegW[wordId]
 
-        tweetIds = self.wordToTweets[wordId]
-
-        posWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getExempleLabel(tweetId) == 1]
-        negWeights = [self.getWeight(tweetId) for tweetId in tweetIds if self.getExempleLabel(tweetId) == -1]
-
-        posW = sum(posWeights)
-        negW = sum(negWeights)
-
-        """ teta indicator (~weaklearner) : indicates class with the bigger weights """
         if posW > negW:
             return 1
         else:
@@ -169,41 +161,30 @@ class trainset:
 
 
     """
-    update the weight of the training exemple in order to find the best weak classifier
-    over the highly weighted exemples (tweets that aren't in the right class are heavily weighted)
+    Update the weights of the training example after a new weak learner was chosen.
     """
-    def setUpdateWeight(self, wLearner, err):
+    def setUpdateWeight(self, wordId, wLearner, err):
 
-        relativeTweetIdSet = self.wordToTweets[wLearner.getWordId()]
+        relativeTweetIdSet = self.wordToTweets[wordId]
 
         Z = 2*math.sqrt(err*(1-err))
 
         for tweetId in relativeTweetIdSet:
 
-            expValue = -wLearner.weight*self.getExempleLabel(tweetId)*wLearner.getLabel()
+            tweetLabel = self.getExempleLabel(tweetId)
+            expValue = -wLearner.weight*tweetLabel*wLearner.getLabel()
 
-            value = math.exp(expValue)/Z
+            oldValue = self.tweetWeight[tweetId]
+            newValue = oldValue*math.exp(expValue)/Z
 
-            self.tweetWeight[tweetId] = self.tweetWeight[tweetId]*value
+            for wordId in self.tweetToWords[tweetId]:
+                if tweetLabel == 1:
+                    self.wordToPosW[wordId] += (newValue - oldValue)
+                else:
+                    self.wordToNegW[wordId] += (newValue - oldValue)
 
-        return relativeTweetIdSet
 
-
-
-    """
-    update the err cache for the word included in the tweetId list given as parameter
-    """
-    def setUpdateErrcache(self, tweetIdLs_weightModif):
-
-        if len(tweetIdLs_weightModif) == 0:
-            print("unexpected arg")
-            return 0
-
-        wordIds_inModif = [self.tweetToWords[tweetId] for tweetId in tweetIdLs_weightModif]
-        wordIds_inModif = reduce( ( lambda x,y: x.union(y) ),wordIds_inModif)
-
-        for wordId in wordIds_inModif:
-                self.err_cache[wordId] = self.compute_pred_err(wordId)
+            self.tweetWeight[tweetId] = newValue
 
 
 

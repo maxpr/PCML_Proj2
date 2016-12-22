@@ -14,15 +14,17 @@ class adaboost:
 
 
 
-    def __init__(self, pathToPosTrainFile, pathToNegTrainFile, wordsByWeakLearner=1):
+    def __init__(self, posTweets, negTweets, wordsByWeakLearner=1):
 
-        self.vocabulary = vocabulary.createVocabulary([pathToPosTrainFile,pathToNegTrainFile])
+        self.vocabulary = vocabulary.createVocabulary([posTweets,negTweets],10)
 
-        self.trainset = trainset(self.vocabulary, pathToPosTrainFile, pathToNegTrainFile)
+        self.trainset = trainset(self.vocabulary, posTweets, negTweets)
 
         self.wordToWeakLearner = {}
 
         self.wordsByWeakLearner = wordsByWeakLearner
+
+
 
 
     """
@@ -43,7 +45,7 @@ class adaboost:
                 best_wordId = curr_wordId
 
 
-        return weakLearner(best_wordId, self.trainset.get_pred_label(best_wordId))
+        return best_wordId, weakLearner(self.trainset.get_pred_label(best_wordId))
 
 
 
@@ -52,41 +54,48 @@ class adaboost:
     """
     learn from the train set and keep a log with the accuracy
     """
-    def learnAndTest(self, pathToOuputRes, posTweetsTest, negTweetsTest, tweetsToPred):
+    def learnAndTest(self, pathToOuputRes, posTweetsTest, negTweetsTest, tweetsToPred, weightThreshold=0.5, unselected_wordIds = None):
+
+        if  unselected_wordIds == None:
+
+            tmp = [i for i in range(self.vocabulary.size())]
+
+            unselected_wordIds = []
+
+            for wordId in tmp:
+                unselected_wordIds.append(wordId)
 
 
-        unselected_wordIds = [i for i in range(self.vocabulary.size())]
 
-        wLearner = self.getNextWeakLearner(unselected_wordIds)
-        curr_err = self.trainset.get_pred_err(wLearner.getWordId())
-        minThreshold = 0.000000001
+        curr_wordId, wLearner = self.getNextWeakLearner(unselected_wordIds)
+        curr_err = self.trainset.get_pred_err(curr_wordId)
 
 
         i = 1
 
-        while curr_err < 0.5:
+        while curr_err < weightThreshold:
 
-            print(str(i)+"/"+str(self.vocabulary.size()) + "  ==> err = " +str(curr_err))
+            if curr_err == 0:
+                curr_err = max([curr_err, 0.0000000000000000001])
 
-            if curr_err < minThreshold:
-                curr_err = minThreshold
-
+            print(str(i) + " " + str(len(unselected_wordIds)))
             wLearner.setWeight(0.5 * math.log((1-curr_err)/curr_err))
 
-            self.wordToWeakLearner[wLearner.getWordId()] = wLearner
+            self.wordToWeakLearner[self.vocabulary.getWord(curr_wordId)] = wLearner
 
-            modifiedWeight_tweetId = self.trainset.setUpdateWeight(wLearner,curr_err)
+            self.trainset.setUpdateWeight(curr_wordId,wLearner,curr_err)
 
+            unselected_wordIds.remove(curr_wordId)
 
-            self.trainset.setUpdateErrcache(modifiedWeight_tweetId)
-
-            unselected_wordIds.remove(wLearner.getWordId())
-
-
-            if(len(unselected_wordIds) == 0):
+            if len(unselected_wordIds) == 0:
                 break
+            else:
+                curr_wordId, wLearner = self.getNextWeakLearner(unselected_wordIds)
+                curr_err = self.trainset.get_pred_err(curr_wordId)
+                i = i+1
 
-            if(i%100 == 0):
+
+            if(i%1500 == 0 or len(unselected_wordIds) == 0 or curr_err>=0.5):
 
                 rsltTest = self.test(posTweetsTest,negTweetsTest)
                 fileOut = open(pathToOuputRes,'a')
@@ -107,8 +116,8 @@ class adaboost:
                 fileOut.close()
 
                 resFile = open(resPath1, 'w')
-                for wL in self.wordToWeakLearner.values():
-                    line = self.vocabulary.getWord(wL.getWordId())
+                for (word, wL) in self.wordToWeakLearner.items():
+                    line = word
                     line += "\t\t" + str(wL.getLabel())
                     line += "\t\t" + str(wL.getWeight()) + "\n"
                     resFile.write(line)
@@ -125,16 +134,10 @@ class adaboost:
 
 
 
-
-            wLearner = self.getNextWeakLearner(unselected_wordIds)
-            curr_err = self.trainset.get_pred_err(wLearner.getWordId())
-
-            i = i+1
-
-
-
-
-
+    """
+    test the data given in parameters using the
+    weak learner computed in test and learn
+    """
     def test(self, posTweets, negTweets):
 
         goodPred = 0
@@ -156,15 +159,16 @@ class adaboost:
 
 
 
+    """
+    predict the label of the tweet given as parameter
+    using the weak learner computed in test and learn
+    """
     def predictLabel(self, tweet):
-
-        """TODO : self.dataClean.setTweetTransform(tweet).split(' ')"""
 
         result = 0
         for word in set(tweet.strip().split(' ')):
-            if self.vocabulary.has(word) and self.vocabulary.getId(word) in self.wordToWeakLearner:
-                id = self.vocabulary.getId(word)
-                result = result + self.wordToWeakLearner[id].getLabel() * self.wordToWeakLearner[id].getWeight()
+            if word in self.wordToWeakLearner:
+                result = result + self.wordToWeakLearner[word].getLabel() * self.wordToWeakLearner[word].getWeight()
 
         if result < 0:
             return -1
