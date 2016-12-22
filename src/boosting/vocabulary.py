@@ -8,32 +8,34 @@ and filter only words that have enough occurrences to appear in the vocabulary.
 class vocabulary:
 
 
-    """
-    param1 : all the paths to the files that have to be parsed
-    param2 : occurrences threshold needed by word to appear in the vocabulary
-    """
+
+
     def __init__(self, wordToId, idToWord):
 
         self.wordToId = wordToId
         self.idToWord = idToWord
 
 
+
+
+    """
+    param1 : all the paths to the files that have to be parsed
+    param2 : the occurrences threshold needed by words to appear in the vocabulary
+    """
     @staticmethod
-    def createVocabulary(pathToFiles, minOccThreshold = 20):
+    def createVocabulary(datas, minOccThreshold = 10):
+
 
         wordToOcc = {}
 
-        for pathToFile in pathToFiles:
-            file = open(pathToFile)
-            for tweet in file:
+        for data in datas:
+            for tweet in data:
                 """  TODO : could be considered out set"""
                 for word in set(tweet.strip().split(' ')):
                     if word not in wordToOcc:
                         wordToOcc[word] = 1
                     else:
                         wordToOcc[word] = wordToOcc[word] + 1
-
-            file.close()
 
 
         freshId = 0
@@ -54,7 +56,7 @@ class vocabulary:
 
     """
     param1 : a word
-    return the identifier for the word given as parameter
+    return the integer identifier for the word given as parameter
     """
     def getId(self, word):
         return self.wordToId[word]
@@ -87,7 +89,7 @@ class vocabulary:
 
 
     """
-    return the word coresponding to the given id
+    return the word corresponding to the given id
     """
     def getWord(self, wordId):
         return self.idToWord[wordId]

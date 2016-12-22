@@ -10,17 +10,22 @@ class dataCleaning:
 
 
 
+
+
+
+
+
     """
     input :
-    param1 : positive tweets path
-    param2 : negative tweets path
+    param1 : a tweet set
     """
     def __init__(self, pathToFile = None):
 
 
         self.treeTagger = treetaggerwrapper.TreeTagger(
             TAGLANG='en',
-            TAGPARFILE='/Users/noodle/workspace/python/PCML/project2/lib/english-utf8.par')
+            TAGPARFILE='/Users/noodle/workspace/python/PCML/project2/lib/english-utf8.par',
+            TAGDIR='../../tree-tagger')
 
         self.specCharSet = set("i<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
         self.trackedWordFunc = set(['POS','MD','NP','IN','VVD','VHZ',',','VV','NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
@@ -39,6 +44,11 @@ class dataCleaning:
 
 
 
+
+
+
+
+
     """
     param1 : positive tweets output file path
     param2 : negative tweets output file path
@@ -51,7 +61,6 @@ class dataCleaning:
         file = open(pathToFile, 'w+')
         file.write('\n'.join(self.data))
         file.close()
-
 
 
 
@@ -88,7 +97,9 @@ class dataCleaning:
         return self.data
 
 
-
+    """
+    count the total number of small words
+    """
     def avgSmallWords(self):
 
         w = {}
@@ -113,7 +124,11 @@ class dataCleaning:
 
 
 
-
+    """
+    Count the word function in the given tweet
+    and concatenate these type of word with the occurrence
+    in the tweet as new words
+    """
     def setWordFunc(self, tweet):
 
         wordFuncToOcc = {}
@@ -138,54 +153,8 @@ class dataCleaning:
 
 
 
-
-    def wordFuncTest(self):
-
-
-        strToWordFunc = {}
-
-
-        for tweet in self.getData():
-
-            strToWordFunc1 = {}
-
-            for res in self.treeTagger.tag_text(tweet):
-                res = res.split('\t')
-                """classic result length : word - word_function - stem"""
-                if len(res) == 3:
-                    if res[1] in strToWordFunc1:
-                        strToWordFunc1[res[1]] = strToWordFunc1[res[1]] + 1
-                    else:
-                        strToWordFunc1[res[1]] = 1
-
-            for (wFunc, occ) in strToWordFunc1.items():
-                if wFunc in strToWordFunc:
-                    strToWordFunc[wFunc].append(occ)
-                else:
-                    strToWordFunc[wFunc] = [occ]
-
-
-        for (wFunc, occLs) in strToWordFunc.items():
-
-            wordFuncOccToTotal = {}
-
-            for occ in occLs:
-                if occ in wordFuncOccToTotal:
-                    wordFuncOccToTotal[occ] = wordFuncOccToTotal[occ] + 1
-                else:
-                    wordFuncOccToTotal[occ] = 1
-
-            strToWordFunc[wFunc] = wordFuncOccToTotal
-
-
-        return strToWordFunc
-
-
-
-
     """
-    mutable modifications of the dataset into the class
-    all duplicates tweets are removed.
+    Remove all duplicates tweets.
     """
     def setDuplicateLinesRemoved(self):
 
@@ -220,13 +189,15 @@ class dataCleaning:
 
 
 
-
+    """
+    save the data to provide to kaggle
+    """
     @staticmethod
     def saveTestData(pathToFile, predictions):
 
         file = open(pathToFile, 'w+')
 
-        file.write("Id, Prediction\n")
+        file.write("Id,Prediction\n")
 
         i = 1
         for pred in predictions:
@@ -239,8 +210,8 @@ class dataCleaning:
 
 
     """
-    mutable modifications of the dataset into the class
-    all tweets are mapped in the aim to have words that can be easily identified.
+    All tweets are mapped in the same way applying some of the functions
+    implemented in this class.
     """
     def setTweetTransform(self):
 
@@ -254,9 +225,8 @@ class dataCleaning:
 
 
 
-
     """
-    the mapping function used to simplify words in order to obtain more identifiable words.
+    The mapping function used to transform a tweet.
     """
     def tweetTransform(self, tweet):
 
@@ -270,7 +240,9 @@ class dataCleaning:
 
 
 
-
+    """
+    modify the punctiation in the content to a mapping char_occurrence
+    """
     def setSpecCharTransform(self,tweet):
 
         puncCounter = {}
@@ -303,6 +275,9 @@ class dataCleaning:
 
 
 
+    """
+    Add the total number of word in the tweet as a new word
+    """
     def setTweetSize(self, tweet):
 
         totalWords = 0
@@ -319,7 +294,7 @@ class dataCleaning:
     """
     stem all the words in the string given as parameters
     """
-    def __tweetStemming(self, tweet):
+    def tweetStemming(self, tweet):
 
         tokens = []
         for res in self.treeTagger.tag_text(tweet):
@@ -336,8 +311,9 @@ class dataCleaning:
 
     """
     Replace the letters that appear many consecutive times to only one occurrence
+    with the aim to reduce the number of word variations (loool, lool, lol)
     """
-    def __consecutiveLetterRemoval(self, token):
+    def consecutiveLetterRemoval(self, token):
 
         lastLetter = None
         mappedToken = ''
@@ -353,39 +329,12 @@ class dataCleaning:
 
 
     """
-    Replace all hashtag present in the given string by a constant string
+    Replace all hashtags present in the given string by a constant string
     """
     def __hashTagRenaming(self, tweet):
 
         return re.sub("#(\w+)", 'hashtag_spec123', tweet)
 
-
-
-
-    """
-    Remove single space between consecutive punctuations
-    """
-    def __punctuationRecover(self, tweet):
-
-        tweet = re.sub('<user>', 'user_spec123', tweet)
-        tweet = re.sub('@card@', 'card_spec123', tweet)
-        tweet = re.sub('<url>', 'url_spec123', tweet)
-
-        isLastPunc = False
-
-        for i in range(len(tweet)-1,0,-1):
-
-            if tweet[i] == ' ':
-                continue
-
-            if isLastPunc and tweet[i] in self.puncSet:
-                if tweet[i+1] == ' ':
-                    tweet = tweet[:i+1] + tweet[i+2:]
-
-            isLastPunc = tweet[i] in self.puncSet
-
-
-        return tweet
 
 
 

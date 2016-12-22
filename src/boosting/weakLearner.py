@@ -1,31 +1,35 @@
 
 """
-weak learner used to partially clusterize tweets
-TODO : take each wordsId weight error and use it to determine the class
+Weak learner are classifier that performs better than random.
 """
 class weakLearner:
 
 
 
-    def __init__(self, wordId, label, weight = 1):
-        self.wordId = wordId
+
+    def __init__(self, label, weight = 1):
         self.weight = weight
         self.label = label
 
 
 
+    """
+    set the weight of the weak learner as the one given
+    as parameter
+    """
     def setWeight(self, weight):
         self.weight = weight
 
-
+    """
+    return the weight of the weak classifier
+    """
     def getWeight(self):
         return self.weight
 
 
-    def getWordId(self):
-        return self.wordId
-
-
+    """
+    return the label of the weak classifier
+    """
     def getLabel(self):
         return self.label
 
