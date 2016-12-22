@@ -1,4 +1,4 @@
-
+from src.boosting.adaboost import adaboost
 from src.dataCleaning import dataCleaning
 from src.word2vec_routines import construct_features, predict_labels
 
@@ -15,6 +15,25 @@ def cleanTest(pathToOrigFile, pathToOutFile):
     dataC.setRemoveTestTweetId()
     dataC.setTweetTransform()
     dataC.save(pathToOutFile)
+
+
+def runBoosting(negTrain, posTrain, negTest, posTest):
+
+    # 1. Open the training data :
+
+    pos = dataCleaning(posTrain).getData()
+    neg = dataCleaning(negTrain).getData()
+
+    posTest = dataCleaning(posTest).getData()
+    negTest = dataCleaning(negTest).getData()
+
+    # 2. Instantiate adaboost class :
+
+    boosting = adaboost(pos, neg)
+
+    # 3. Start the algorithm :
+
+    boosting.run('result.txt', posTest, negTest)
 
 
 

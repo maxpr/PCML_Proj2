@@ -23,7 +23,7 @@ class vocabulary:
     param2 : the occurrences threshold needed by words to appear in the vocabulary
     """
     @staticmethod
-    def createVocabulary(datas, minOccThreshold = 10):
+    def createVocabulary(datas, minOccThreshold = 20):
 
 
         wordToOcc = {}
