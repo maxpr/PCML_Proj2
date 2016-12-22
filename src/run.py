@@ -40,8 +40,8 @@ def runBoosting(negTrain, posTrain, negTest, posTest, kaggleTest):
     boosting.run('result.txt', posTest, negTest, kaggleTest)
 
 def word2vec():
-    path_pos = "data/train_pos_full.txt"
-    path_neg = "data/train_neg_full.txt"
+    path_pos = "data/pos_train.txt"
+    path_neg = "data/neg_train.txt"
     path_testing = "data/test_data.txt"
     
     path_testing_clean= "data_test_clean.txt"
