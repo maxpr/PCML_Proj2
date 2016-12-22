@@ -21,11 +21,12 @@ class dataCleaning:
     """
     def __init__(self, pathToFile = None):
 
-
+        """
         self.treeTagger = treetaggerwrapper.TreeTagger(
             TAGLANG='en',
             TAGPARFILE='../lib/english-utf8.par',
             TAGDIR='../tree-tagger')
+        """
 
         self.specCharSet = set("i<3>?@[.,\/#!$%\^&\*;:{}=\-_`~()]")
         self.trackedWordFunc = set(['POS','MD','NP','IN','VVD','VHZ',',','VV','NN','WP','VVN','SENT','SYM','(','MD',':','JJ','UH','CD','PP'])
@@ -129,13 +130,15 @@ class dataCleaning:
     and concatenate these type of word with the occurrence
     in the tweet as new words
     """
+    # inactive because tree tagger api need to be manually installed
+    """
     def setWordFunc(self, tweet):
 
         wordFuncToOcc = {}
 
         for res in self.treeTagger.tag_text(tweet):
             res = res.split('\t')
-            """classic result length : word - word_function - stem"""
+            #classic result length : word - word_function - stem
             if len(res) == 3:
                 if res[1] in wordFuncToOcc:
                     wordFuncToOcc[res[1]] = wordFuncToOcc[res[1]] + 1
@@ -149,7 +152,7 @@ class dataCleaning:
                 tweet =  tweet + " " + " WF_" + wF + str(occ)
 
         return tweet
-
+    """
 
 
 
@@ -233,7 +236,7 @@ class dataCleaning:
         """tmp = self.__tweetStemming(tweet)"""
         tmp = tweet
         tmp = self.setTweetSize(tmp)
-        tmp = self.setWordFunc(tmp)
+        #tmp = self.setWordFunc(tmp)
         tmp = self.setSpecCharTransform(tmp)
 
         return tmp
@@ -294,18 +297,20 @@ class dataCleaning:
     """
     stem all the words in the string given as parameters
     """
+    # inactive because tree tagger api need to be manually installed
+    """
     def tweetStemming(self, tweet):
 
         tokens = []
         for res in self.treeTagger.tag_text(tweet):
             res = res.split('\t')
-            """classic result length : word - word_function - stem"""
+            #classic result length : word - word_function - stem
             if len(res) == 3:
                 tokens.append(res[2])
             elif len(res) == 1:
                 tokens.append(res[0])
         return ' '.join(tokens)
-
+    """
 
 
 
