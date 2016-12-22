@@ -43,8 +43,8 @@ def runBoosting(negTrain, posTrain, negTest, posTest, kaggleTest):
 if len(sys.argv) != 2:
     print("you have to specify one of the following entry : ")
 elif sys.argv[1] == "boosting":
-    runBoosting("data/neg_train.txt",
-                "data/pos_train.txt",
+    runBoosting("data/train_neg_full.txt",
+                "data/train_pos_full.txt",
                 "data/neg_train.txt",
                 "data/pos_train.txt",
                 "data/test_data.txt",)
