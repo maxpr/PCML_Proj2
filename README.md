@@ -24,15 +24,34 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
 
 ## TODO
 
-- [ ] Code
-  - [ ] 4 baseline methods implemented and tested
-	- [ ] SGD updates to train the matrix factorization
-	- [ ] Construct feature representation of each training tweet
-	- [ ] Linear Classifier Trainer (logistic regression or SVM, scikit lib)
-	- [ ] Predicter : predict labels for all tweets in the test set
-  - [ ] Cross-validation
-  - [ ] Bias-Variance decomposition
-  - [ ] Correlation check function
+- [ ] Report - imported from project 1 : still useful?
+  - [ ] Abstract and introduction
+  - [x] Exploratory data analysis
+    - [x] Data description
+    - [ ] Data visualization
+    - [ ] Data cleaning
+  - [ ] Feature Processing (description of final features used and why)
+  - [ ] baseline methods description and comparison (parameters, test error)
+    - [ ] over/under fit (bias-variance decomposition)
+    - [ ] visualizations
+    - [ ] cross validation (test error estimation)
+    - [ ] cost function used
+  - [ ] Describe the additional steps to enhance baseline results 
+    - [ ] Cross-Validation and Bias-Variance decomposition for the final model(s) retained
+  - [ ] Conclusion
+  
+- [ ] Code - comments!
+  - [x] 4 baseline methods implemented and tested
+	- [x] SGD updates to train the matrix factorization
+	- [x] Construct feature representation of each training tweet
+	- [x] Linear Classifier Trainer (logistic regression or SVM, scikit lib)
+	- [x] Predicter : predict labels for all tweets in the test set
+  - [ ] Hugo part
+  - [ ] Max part
+  - [ ] run.py
+
+
+
 
   
 - [ ] Be 1st on the leaderboard - imported from project 1 : still useful?
@@ -56,21 +75,7 @@ Run the script ```run.py```, which will output in file ```data/final-predictions
     - [ ] try one-hot encoding (mainly for the category variable) [reference](https://www.quora.com/What-is-one-hot-encoding-and-when-is-it-used-in-data-science)
     - [ ] try feature deletions
 
-- [ ] Report - imported from project 1 : still useful?
-  - [ ] Abstract and introduction
-  - [ ] Exploratory data analysis
-    - [ ] Data description
-    - [ ] Data visualization
-    - [ ] Data cleaning
-  - [ ] Feature Processing (description of final features used and why)
-  - [ ] baseline methods description and comparison (parameters, test error)
-    - [ ] over/under fit (bias-variance decomposition)
-    - [ ] visualizations
-    - [ ] cross validation (test error estimation)
-    - [ ] cost function used
-  - [ ] Describe the additional steps to enhance baseline results 
-    - [ ] Cross-Validation and Bias-Variance decomposition for the final model(s) retained
-  - [ ] Conclusion
+
 
 
 

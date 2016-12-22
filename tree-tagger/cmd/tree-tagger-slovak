@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=/Users/noodle/workspace/python/PCML/project2/tree-tagger/bin
+CMD=/Users/noodle/workspace/python/PCML/project2/tree-tagger/cmd
+LIB=/Users/noodle/workspace/python/PCML/project2/tree-tagger/lib
+
+OPTIONS="-token -lemma -sgml"
+
+TAGGER=${BIN}/tree-tagger
+TOKENIZER=${CMD}/utf8-tokenize.perl
+PARFILE=${LIB}/slovak-utf8.par
+
+$TOKENIZER $* |
+$TAGGER $OPTIONS $PARFILE
